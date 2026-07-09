@@ -1,394 +1,394 @@
-source	target	traffic
-rachelerman	mattmcilwain	50
-rachelerman	DaveParkerSEA	9
-rachelerman	toddbishop	7
-rachelerman	ashannstew	8
-rachelerman	LeslieFeinzaig	9
-rachelerman	akipman	9
-rachelerman	matt_oppy	10
-rachelerman	gilbert	9
-rachelerman	juliesandler	9
-rachelerman	BradSmi	9
-rachelerman	crashdev	8
-rachelerman	ShaunaCausey	7
-rachelerman	john_gabbert	7
-rachelerman	moniguzman	10
-rachelerman	mattmday	10
-rachelerman	Rich_Barton	7
-rachelerman	daryn	5
-rachelerman	lovelletters	8
-rachelerman	etzioni	7
-rachelerman	MissDestructo	8
-rachelerman	heatherredman	9
-rachelerman	danshapiro	6
-rachelerman	medinism	8
-rachelerman	KieranSnyder	5
-rachelerman	hadip	8
-rachelerman	RajSinghSeattle	6
-rachelerman	Ryanintheus	7
-rachelerman	sonalpmane	8
-rachelerman	marybethlambert	5
-rachelerman	Jenerationy	10
-mattmcilwain	toddbishop	9
-mattmcilwain	gilbert	10
-mattmcilwain	juliesandler	6
-mattmcilwain	funcOfJoe	8
-mattmcilwain	Rich_Barton	6
-mattmcilwain	kirbywinfield	9
-mattmcilwain	etzioni	8
-mattmcilwain	MissDestructo	9
-mattmcilwain	RajSinghSeattle	7
-mattmcilwain	ashannstew	10
-mattmcilwain	matt_oppy	9
-mattmcilwain	ShaunaCausey	9
-mattmcilwain	mattmday	5
-mattmcilwain	lovelletters	10
-mattmcilwain	Kristen_Hammy	6
-DaveParkerSEA	toddbishop	8
-DaveParkerSEA	ashannstew	6
-DaveParkerSEA	LeslieFeinzaig	5
-DaveParkerSEA	matt_oppy	6
-DaveParkerSEA	stevesi	6
-DaveParkerSEA	gilbert	5
-DaveParkerSEA	Ryanintheus	10
-DaveParkerSEA	juliesandler	10
-DaveParkerSEA	crashdev	6
-DaveParkerSEA	funcOfJoe	5
-DaveParkerSEA	sonalpmane	9
-DaveParkerSEA	ShaunaCausey	6
-DaveParkerSEA	SoGulley	9
-DaveParkerSEA	john_gabbert	10
-DaveParkerSEA	moniguzman	9
-DaveParkerSEA	mattmday	5
-DaveParkerSEA	Rich_Barton	8
-DaveParkerSEA	2morrowknight	6
-DaveParkerSEA	jinman	10
-DaveParkerSEA	tarah	8
-DaveParkerSEA	Jenerationy	5
-DaveParkerSEA	lanctot	5
-DaveParkerSEA	Kristen_Hammy	5
-DaveParkerSEA	nhuntwalker	5
-DaveParkerSEA	kirbywinfield	6
-DaveParkerSEA	lovelletters	8
-DaveParkerSEA	eugenio_pace	7
-DaveParkerSEA	etzioni	6
-DaveParkerSEA	MissDestructo	5
-DaveParkerSEA	heatherredman	7
-DaveParkerSEA	danshapiro	9
-DaveParkerSEA	medinism	7
-DaveParkerSEA	KieranSnyder	5
-DaveParkerSEA	hadip	6
-DaveParkerSEA	RajSinghSeattle	9
-toddbishop	ashannstew	1
-toddbishop	LeslieFeinzaig	8
-toddbishop	akipman	8
-toddbishop	matt_oppy	9
-toddbishop	stevesi	5
-toddbishop	gilbert	8
-toddbishop	Ryanintheus	10
-toddbishop	juliesandler	7
-toddbishop	BradSmi	8
-toddbishop	crashdev	5
-toddbishop	funcOfJoe	8
-toddbishop	JenMsft	8
-toddbishop	ShaunaCausey	9
-toddbishop	SoGulley	9
-toddbishop	john_gabbert	10
-toddbishop	moniguzman	5
-toddbishop	mattmday	9
-toddbishop	Rich_Barton	10
-toddbishop	jinman	7
-toddbishop	tarah	7
-toddbishop	daryn	10
-toddbishop	PeterHamilton	8
-toddbishop	lanctot	10
-toddbishop	Kristen_Hammy	6
-toddbishop	kirbywinfield	8
-toddbishop	lovelletters	5
-toddbishop	etzioni	8
-toddbishop	sarahstood	6
-toddbishop	MissDestructo	10
-toddbishop	heatherredman	7
-toddbishop	danshapiro	8
-toddbishop	mcolacurcio	7
-toddbishop	medinism	7
-toddbishop	KieranSnyder	9
-toddbishop	hadip	7
-toddbishop	RajSinghSeattle	8
-toddbishop	marybethlambert	7
-toddbishop	Jenerationy	7
-ashannstew	LeslieFeinzaig	7
-ashannstew	matt_oppy	10
-ashannstew	stevesi	6
-ashannstew	gilbert	8
-ashannstew	juliesandler	7
-ashannstew	crashdev	9
-ashannstew	moniguzman	8
-ashannstew	mattmday	7
-ashannstew	lovelletters	7
-ashannstew	heatherredman	10
-ashannstew	hadip	8
-ashannstew	RajSinghSeattle	7
-ashannstew	Jenerationy	8
-ashannstew	lanctot	7
-LeslieFeinzaig	matt_oppy	7
-LeslieFeinzaig	stevesi	6
-LeslieFeinzaig	juliesandler	5
-LeslieFeinzaig	sonalpmane	7
-LeslieFeinzaig	ShaunaCausey	10
-LeslieFeinzaig	SoGulley	7
-LeslieFeinzaig	kirbywinfield	10
-LeslieFeinzaig	lovelletters	7
-LeslieFeinzaig	MissDestructo	7
-LeslieFeinzaig	heatherredman	10
-LeslieFeinzaig	mcolacurcio	6
-LeslieFeinzaig	KieranSnyder	6
-LeslieFeinzaig	Ryanintheus	9
-LeslieFeinzaig	moniguzman	7
-akipman	BradSmi	9
-akipman	mattmday	6
-akipman	MissDestructo	10
-akipman	JenMsft	10
-matt_oppy	stevesi	6
-matt_oppy	gilbert	5
-matt_oppy	juliesandler	7
-matt_oppy	crashdev	5
-matt_oppy	ShaunaCausey	6
-matt_oppy	john_gabbert	6
-matt_oppy	moniguzman	9
-matt_oppy	Rich_Barton	9
-matt_oppy	Jenerationy	10
-matt_oppy	PeterHamilton	9
-matt_oppy	Kristen_Hammy	6
-matt_oppy	kirbywinfield	8
-matt_oppy	lovelletters	10
-matt_oppy	eugenio_pace	8
-matt_oppy	etzioni	8
-matt_oppy	heatherredman	5
-matt_oppy	danshapiro	8
-matt_oppy	medinism	9
-matt_oppy	KieranSnyder	7
-matt_oppy	RajSinghSeattle	9
-gilbert	stevesi	7
-gilbert	juliesandler	5
-gilbert	Rich_Barton	10
-gilbert	daryn	5
-gilbert	kirbywinfield	5
-gilbert	KieranSnyder	6
-gilbert	moniguzman	7
-gilbert	Jenerationy	10
-gilbert	etzioni	5
-gilbert	MissDestructo	5
-gilbert	heatherredman	10
-gilbert	lanctot	8
-juliesandler	BradSmi	5
-juliesandler	crashdev	8
-juliesandler	sonalpmane	8
-juliesandler	ShaunaCausey	9
-juliesandler	john_gabbert	7
-juliesandler	moniguzman	5
-juliesandler	Rich_Barton	5
-juliesandler	daryn	9
-juliesandler	Kristen_Hammy	5
-juliesandler	kirbywinfield	8
-juliesandler	lovelletters	10
-juliesandler	etzioni	5
-juliesandler	MissDestructo	8
-juliesandler	heatherredman	5
-juliesandler	danshapiro	6
-juliesandler	KieranSnyder	10
-juliesandler	hadip	8
-juliesandler	RajSinghSeattle	8
-juliesandler	mattmday	9
-juliesandler	Jenerationy	6
-juliesandler	funcOfJoe	10
-juliesandler	SoGulley	8
-juliesandler	sarahstood	9
-BradSmi	mattmday	10
-BradSmi	Rich_Barton	5
-BradSmi	etzioni	10
-BradSmi	hadip	8
-BradSmi	RajSinghSeattle	10
-BradSmi	heatherredman	6
-BradSmi	SoGulley	7
-BradSmi	lanctot	6
-BradSmi	JenMsft	5
-crashdev	stevesi	8
-crashdev	john_gabbert	5
-crashdev	Rich_Barton	5
-crashdev	Kristen_Hammy	8
-crashdev	kirbywinfield	8
-crashdev	lovelletters	9
-crashdev	eugenio_pace	8
-crashdev	etzioni	6
-crashdev	heatherredman	9
-crashdev	danshapiro	7
-crashdev	medinism	5
-crashdev	RajSinghSeattle	6
-crashdev	sonalpmane	9
-crashdev	Jenerationy	5
-crashdev	hadip	10
-crashdev	SoGulley	6
-crashdev	jinman	6
-crashdev	PeterHamilton	9
-crashdev	sarahstood	9
-ShaunaCausey	stevesi	6
-ShaunaCausey	SoGulley	6
-ShaunaCausey	john_gabbert	10
-ShaunaCausey	moniguzman	7
-ShaunaCausey	marybethlambert	10
-ShaunaCausey	Rich_Barton	9
-ShaunaCausey	jinman	5
-ShaunaCausey	daryn	5
-ShaunaCausey	Jenerationy	6
-ShaunaCausey	PeterHamilton	9
-ShaunaCausey	lanctot	7
-ShaunaCausey	Kristen_Hammy	6
-ShaunaCausey	lovelletters	10
-ShaunaCausey	etzioni	7
-ShaunaCausey	sarahstood	8
-ShaunaCausey	MissDestructo	6
-ShaunaCausey	heatherredman	10
-ShaunaCausey	mcolacurcio	7
-ShaunaCausey	KieranSnyder	7
-ShaunaCausey	hadip	10
-ShaunaCausey	RajSinghSeattle	5
-moniguzman	Ryanintheus	9
-moniguzman	sonalpmane	9
-moniguzman	stevesi	6
-moniguzman	mattmday	9
-moniguzman	Rich_Barton	7
-moniguzman	tarah	9
-moniguzman	daryn	9
-moniguzman	Jenerationy	10
-moniguzman	lanctot	7
-moniguzman	lovelletters	5
-moniguzman	sarahstood	9
-moniguzman	MissDestructo	6
-moniguzman	heatherredman	5
-moniguzman	danshapiro	10
-moniguzman	mcolacurcio	5
-moniguzman	hadip	6
-moniguzman	RajSinghSeattle	10
-moniguzman	marybethlambert	10
-moniguzman	SoGulley	9
-moniguzman	PeterHamilton	6
-mattmday	Rich_Barton	10
-mattmday	daryn	10
-mattmday	medinism	9
-mattmday	KieranSnyder	6
-mattmday	MissDestructo	8
-Rich_Barton	stevesi	5
-Rich_Barton	etzioni	10
-Rich_Barton	hadip	9
-Rich_Barton	heatherredman	7
-Rich_Barton	Kristen_Hammy	9
-Rich_Barton	mcolacurcio	9
-Rich_Barton	RajSinghSeattle	8
-daryn	heatherredman	8
-daryn	danshapiro	6
-daryn	hadip	5
-lovelletters	Ryanintheus	5
-lovelletters	sonalpmane	10
-lovelletters	stevesi	9
-lovelletters	tarah	10
-lovelletters	Kristen_Hammy	6
-lovelletters	kirbywinfield	5
-lovelletters	etzioni	7
-lovelletters	MissDestructo	9
-lovelletters	heatherredman	9
-lovelletters	danshapiro	8
-lovelletters	KieranSnyder	6
-lovelletters	hadip	9
-lovelletters	RajSinghSeattle	10
-lovelletters	SoGulley	6
-lovelletters	lanctot	9
-lovelletters	PeterHamilton	7
-lovelletters	sarahstood	7
-lovelletters	mcolacurcio	8
-etzioni	kirbywinfield	6
-etzioni	heatherredman	6
-etzioni	hadip	8
-etzioni	KieranSnyder	8
-etzioni	funcOfJoe	7
-etzioni	stevesi	9
-MissDestructo	Ryanintheus	9
-MissDestructo	sonalpmane	7
-MissDestructo	stevesi	7
-MissDestructo	SoGulley	9
-MissDestructo	2morrowknight	9
-MissDestructo	tarah	8
-MissDestructo	PeterHamilton	5
-MissDestructo	heatherredman	5
-MissDestructo	danshapiro	7
-MissDestructo	KieranSnyder	6
-MissDestructo	RajSinghSeattle	7
-heatherredman	Ryanintheus	6
-heatherredman	sonalpmane	5
-heatherredman	marybethlambert	6
-heatherredman	stevesi	7
-heatherredman	SoGulley	7
-heatherredman	tarah	10
-heatherredman	Kristen_Hammy	9
-heatherredman	kirbywinfield	5
-heatherredman	mcolacurcio	10
-heatherredman	medinism	9
-heatherredman	KieranSnyder	5
-heatherredman	RajSinghSeattle	8
-heatherredman	lanctot	9
-danshapiro	sonalpmane	10
-danshapiro	Jenerationy	9
-danshapiro	stevesi	7
-danshapiro	KieranSnyder	6
-danshapiro	Kristen_Hammy	9
-danshapiro	PeterHamilton	10
-medinism	hadip	5
-medinism	SoGulley	10
-KieranSnyder	sonalpmane	8
-KieranSnyder	stevesi	9
-KieranSnyder	Kristen_Hammy	7
-KieranSnyder	nhuntwalker	8
-KieranSnyder	funcOfJoe	5
-KieranSnyder	SoGulley	6
-KieranSnyder	JenMsft	6
-hadip	sonalpmane	9
-hadip	Jenerationy	6
-hadip	stevesi	6
-hadip	funcOfJoe	6
-hadip	SoGulley	9
-hadip	jinman	5
-hadip	lanctot	7
-hadip	nhuntwalker	10
-hadip	mcolacurcio	6
-RajSinghSeattle	Ryanintheus	9
-RajSinghSeattle	funcOfJoe	9
-RajSinghSeattle	SoGulley	9
-RajSinghSeattle	stevesi	10
-funcOfJoe	stevesi	5
-kirbywinfield	Ryanintheus	8
-kirbywinfield	stevesi	5
-kirbywinfield	lanctot	8
-kirbywinfield	SoGulley	9
-kirbywinfield	sarahstood	5
-kirbywinfield	mcolacurcio	7
-stevesi	sonalpmane	8
-stevesi	JenMsft	8
-stevesi	Kristen_Hammy	5
-stevesi	jinman	9
-stevesi	lanctot	8
-stevesi	mcolacurcio	7
-Ryanintheus	JenMsft	8
-Ryanintheus	Jenerationy	7
-Ryanintheus	nhuntwalker	6
-Ryanintheus	sarahstood	10
-sonalpmane	SoGulley	7
-SoGulley	tarah	5
-SoGulley	Jenerationy	6
-SoGulley	PeterHamilton	7
-SoGulley	Kristen_Hammy	7
-SoGulley	nhuntwalker	7
-tarah	nhuntwalker	6
-Jenerationy	PeterHamilton	10
-Kristen_Hammy	mcolacurcio	5
-nhuntwalker	JenMsft	6
-PeterHamilton	mcolacurcio	8
+﻿source,target,traffic
+rachelerman,mattmcilwain,35
+rachelerman,DaveParkerSEA,5
+rachelerman,toddbishop,7
+rachelerman,ashannstew,4
+rachelerman,LeslieFeinzaig,7
+rachelerman,akipman,7
+rachelerman,matt_oppy,4
+rachelerman,gilbert,8
+rachelerman,juliesandler,7
+rachelerman,BradSmi,5
+rachelerman,crashdev,6
+rachelerman,ShaunaCausey,7
+rachelerman,john_gabbert,8
+rachelerman,moniguzman,4
+rachelerman,mattmday,8
+rachelerman,Rich_Barton,6
+rachelerman,daryn,40
+rachelerman,lovelletters,7
+rachelerman,etzioni,9
+rachelerman,MissDestructo,4
+rachelerman,heatherredman,4
+rachelerman,danshapiro,5
+rachelerman,medinism,5
+rachelerman,KieranSnyder,6
+rachelerman,hadip,8
+rachelerman,RajSinghSeattle,6
+rachelerman,Ryanintheus,9
+rachelerman,sonalpmane,6
+rachelerman,marybethlambert,6
+rachelerman,Jenerationy,7
+mattmcilwain,toddbishop,7
+mattmcilwain,gilbert,5
+mattmcilwain,juliesandler,4
+mattmcilwain,funcOfJoe,7
+mattmcilwain,Rich_Barton,9
+mattmcilwain,kirbywinfield,7
+mattmcilwain,etzioni,7
+mattmcilwain,MissDestructo,9
+mattmcilwain,RajSinghSeattle,5
+mattmcilwain,ashannstew,7
+mattmcilwain,matt_oppy,6
+mattmcilwain,ShaunaCausey,5
+mattmcilwain,mattmday,6
+mattmcilwain,lovelletters,7
+mattmcilwain,Kristen_Hammy,7
+DaveParkerSEA,toddbishop,4
+DaveParkerSEA,ashannstew,9
+DaveParkerSEA,LeslieFeinzaig,7
+DaveParkerSEA,matt_oppy,9
+DaveParkerSEA,stevesi,4
+DaveParkerSEA,gilbert,9
+DaveParkerSEA,Ryanintheus,6
+DaveParkerSEA,juliesandler,5
+DaveParkerSEA,crashdev,7
+DaveParkerSEA,funcOfJoe,9
+DaveParkerSEA,sonalpmane,4
+DaveParkerSEA,ShaunaCausey,7
+DaveParkerSEA,SoGulley,7
+DaveParkerSEA,john_gabbert,6
+DaveParkerSEA,moniguzman,6
+DaveParkerSEA,mattmday,5
+DaveParkerSEA,Rich_Barton,1
+DaveParkerSEA,2morrowknight,9
+DaveParkerSEA,jinman,4
+DaveParkerSEA,tarah,8
+DaveParkerSEA,Jenerationy,8
+DaveParkerSEA,lanctot,7
+DaveParkerSEA,Kristen_Hammy,7
+DaveParkerSEA,nhuntwalker,7
+DaveParkerSEA,kirbywinfield,6
+DaveParkerSEA,lovelletters,5
+DaveParkerSEA,eugenio_pace,6
+DaveParkerSEA,etzioni,6
+DaveParkerSEA,MissDestructo,9
+DaveParkerSEA,heatherredman,9
+DaveParkerSEA,danshapiro,4
+DaveParkerSEA,medinism,7
+DaveParkerSEA,KieranSnyder,6
+DaveParkerSEA,hadip,6
+DaveParkerSEA,RajSinghSeattle,6
+toddbishop,ashannstew,9
+toddbishop,LeslieFeinzaig,4
+toddbishop,akipman,5
+toddbishop,matt_oppy,6
+toddbishop,stevesi,6
+toddbishop,gilbert,5
+toddbishop,Ryanintheus,7
+toddbishop,juliesandler,8
+toddbishop,BradSmi,5
+toddbishop,crashdev,8
+toddbishop,funcOfJoe,7
+toddbishop,JenMsft,4
+toddbishop,ShaunaCausey,1
+toddbishop,SoGulley,8
+toddbishop,john_gabbert,4
+toddbishop,moniguzman,9
+toddbishop,mattmday,5
+toddbishop,Rich_Barton,8
+toddbishop,jinman,5
+toddbishop,tarah,8
+toddbishop,daryn,5
+toddbishop,PeterHamilton,7
+toddbishop,lanctot,4
+toddbishop,Kristen_Hammy,9
+toddbishop,kirbywinfield,9
+toddbishop,lovelletters,7
+toddbishop,etzioni,9
+toddbishop,sarahstood,8
+toddbishop,MissDestructo,8
+toddbishop,heatherredman,9
+toddbishop,danshapiro,7
+toddbishop,mcolacurcio,7
+toddbishop,medinism,6
+toddbishop,KieranSnyder,7
+toddbishop,hadip,8
+toddbishop,RajSinghSeattle,5
+toddbishop,marybethlambert,8
+toddbishop,Jenerationy,4
+ashannstew,LeslieFeinzaig,6
+ashannstew,matt_oppy,6
+ashannstew,stevesi,9
+ashannstew,gilbert,7
+ashannstew,juliesandler,9
+ashannstew,crashdev,8
+ashannstew,moniguzman,5
+ashannstew,mattmday,9
+ashannstew,lovelletters,7
+ashannstew,heatherredman,6
+ashannstew,hadip,9
+ashannstew,RajSinghSeattle,8
+ashannstew,Jenerationy,9
+ashannstew,lanctot,7
+LeslieFeinzaig,matt_oppy,4
+LeslieFeinzaig,stevesi,7
+LeslieFeinzaig,juliesandler,5
+LeslieFeinzaig,sonalpmane,4
+LeslieFeinzaig,ShaunaCausey,8
+LeslieFeinzaig,SoGulley,8
+LeslieFeinzaig,kirbywinfield,4
+LeslieFeinzaig,lovelletters,5
+LeslieFeinzaig,MissDestructo,7
+LeslieFeinzaig,heatherredman,5
+LeslieFeinzaig,mcolacurcio,9
+LeslieFeinzaig,KieranSnyder,8
+LeslieFeinzaig,Ryanintheus,7
+LeslieFeinzaig,moniguzman,9
+akipman,BradSmi,9
+akipman,mattmday,4
+akipman,MissDestructo,4
+akipman,JenMsft,5
+matt_oppy,stevesi,8
+matt_oppy,gilbert,8
+matt_oppy,juliesandler,7
+matt_oppy,crashdev,7
+matt_oppy,ShaunaCausey,7
+matt_oppy,john_gabbert,9
+matt_oppy,moniguzman,4
+matt_oppy,Rich_Barton,8
+matt_oppy,Jenerationy,9
+matt_oppy,PeterHamilton,5
+matt_oppy,Kristen_Hammy,8
+matt_oppy,kirbywinfield,5
+matt_oppy,lovelletters,5
+matt_oppy,eugenio_pace,5
+matt_oppy,etzioni,5
+matt_oppy,heatherredman,4
+matt_oppy,danshapiro,9
+matt_oppy,medinism,7
+matt_oppy,KieranSnyder,8
+matt_oppy,RajSinghSeattle,4
+gilbert,stevesi,7
+gilbert,juliesandler,8
+gilbert,Rich_Barton,5
+gilbert,daryn,4
+gilbert,kirbywinfield,8
+gilbert,KieranSnyder,4
+gilbert,moniguzman,7
+gilbert,Jenerationy,7
+gilbert,etzioni,5
+gilbert,MissDestructo,7
+gilbert,heatherredman,5
+gilbert,lanctot,4
+juliesandler,BradSmi,8
+juliesandler,crashdev,6
+juliesandler,sonalpmane,9
+juliesandler,ShaunaCausey,6
+juliesandler,john_gabbert,8
+juliesandler,moniguzman,9
+juliesandler,Rich_Barton,5
+juliesandler,daryn,9
+juliesandler,Kristen_Hammy,7
+juliesandler,kirbywinfield,9
+juliesandler,lovelletters,8
+juliesandler,etzioni,7
+juliesandler,MissDestructo,4
+juliesandler,heatherredman,8
+juliesandler,danshapiro,5
+juliesandler,KieranSnyder,7
+juliesandler,hadip,9
+juliesandler,RajSinghSeattle,9
+juliesandler,mattmday,4
+juliesandler,Jenerationy,7
+juliesandler,funcOfJoe,9
+juliesandler,SoGulley,6
+juliesandler,sarahstood,7
+BradSmi,mattmday,6
+BradSmi,Rich_Barton,4
+BradSmi,etzioni,9
+BradSmi,hadip,5
+BradSmi,RajSinghSeattle,5
+BradSmi,heatherredman,4
+BradSmi,SoGulley,6
+BradSmi,lanctot,9
+BradSmi,JenMsft,8
+crashdev,stevesi,5
+crashdev,john_gabbert,4
+crashdev,Rich_Barton,5
+crashdev,Kristen_Hammy,7
+crashdev,kirbywinfield,5
+crashdev,lovelletters,7
+crashdev,eugenio_pace,8
+crashdev,etzioni,4
+crashdev,heatherredman,8
+crashdev,danshapiro,7
+crashdev,medinism,4
+crashdev,RajSinghSeattle,6
+crashdev,sonalpmane,4
+crashdev,Jenerationy,7
+crashdev,hadip,6
+crashdev,SoGulley,4
+crashdev,jinman,8
+crashdev,PeterHamilton,5
+crashdev,sarahstood,9
+ShaunaCausey,stevesi,4
+ShaunaCausey,SoGulley,4
+ShaunaCausey,john_gabbert,4
+ShaunaCausey,moniguzman,4
+ShaunaCausey,marybethlambert,7
+ShaunaCausey,Rich_Barton,5
+ShaunaCausey,jinman,5
+ShaunaCausey,daryn,6
+ShaunaCausey,Jenerationy,6
+ShaunaCausey,PeterHamilton,9
+ShaunaCausey,lanctot,8
+ShaunaCausey,Kristen_Hammy,4
+ShaunaCausey,lovelletters,6
+ShaunaCausey,etzioni,8
+ShaunaCausey,sarahstood,4
+ShaunaCausey,MissDestructo,8
+ShaunaCausey,heatherredman,7
+ShaunaCausey,mcolacurcio,8
+ShaunaCausey,KieranSnyder,4
+ShaunaCausey,hadip,5
+ShaunaCausey,RajSinghSeattle,8
+moniguzman,Ryanintheus,7
+moniguzman,sonalpmane,9
+moniguzman,stevesi,5
+moniguzman,mattmday,6
+moniguzman,Rich_Barton,8
+moniguzman,tarah,9
+moniguzman,daryn,6
+moniguzman,Jenerationy,5
+moniguzman,lanctot,4
+moniguzman,lovelletters,9
+moniguzman,sarahstood,8
+moniguzman,MissDestructo,7
+moniguzman,heatherredman,4
+moniguzman,danshapiro,5
+moniguzman,mcolacurcio,6
+moniguzman,hadip,9
+moniguzman,RajSinghSeattle,4
+moniguzman,marybethlambert,5
+moniguzman,SoGulley,5
+moniguzman,PeterHamilton,8
+mattmday,Rich_Barton,6
+mattmday,daryn,4
+mattmday,medinism,7
+mattmday,KieranSnyder,9
+mattmday,MissDestructo,6
+Rich_Barton,stevesi,5
+Rich_Barton,etzioni,8
+Rich_Barton,hadip,4
+Rich_Barton,heatherredman,4
+Rich_Barton,Kristen_Hammy,8
+Rich_Barton,mcolacurcio,4
+Rich_Barton,RajSinghSeattle,6
+daryn,heatherredman,4
+daryn,danshapiro,7
+daryn,hadip,6
+lovelletters,Ryanintheus,5
+lovelletters,sonalpmane,6
+lovelletters,stevesi,7
+lovelletters,tarah,6
+lovelletters,Kristen_Hammy,8
+lovelletters,kirbywinfield,5
+lovelletters,etzioni,8
+lovelletters,MissDestructo,6
+lovelletters,heatherredman,7
+lovelletters,danshapiro,6
+lovelletters,KieranSnyder,9
+lovelletters,hadip,8
+lovelletters,RajSinghSeattle,6
+lovelletters,SoGulley,5
+lovelletters,lanctot,8
+lovelletters,PeterHamilton,4
+lovelletters,sarahstood,6
+lovelletters,mcolacurcio,5
+etzioni,kirbywinfield,5
+etzioni,heatherredman,7
+etzioni,hadip,4
+etzioni,KieranSnyder,9
+etzioni,funcOfJoe,7
+etzioni,stevesi,6
+MissDestructo,Ryanintheus,9
+MissDestructo,sonalpmane,9
+MissDestructo,stevesi,9
+MissDestructo,SoGulley,6
+MissDestructo,2morrowknight,6
+MissDestructo,tarah,6
+MissDestructo,PeterHamilton,6
+MissDestructo,heatherredman,7
+MissDestructo,danshapiro,4
+MissDestructo,KieranSnyder,8
+MissDestructo,RajSinghSeattle,7
+heatherredman,Ryanintheus,4
+heatherredman,sonalpmane,7
+heatherredman,marybethlambert,9
+heatherredman,stevesi,4
+heatherredman,SoGulley,8
+heatherredman,tarah,6
+heatherredman,Kristen_Hammy,5
+heatherredman,kirbywinfield,5
+heatherredman,mcolacurcio,9
+heatherredman,medinism,5
+heatherredman,KieranSnyder,5
+heatherredman,RajSinghSeattle,6
+heatherredman,lanctot,6
+danshapiro,sonalpmane,8
+danshapiro,Jenerationy,5
+danshapiro,stevesi,5
+danshapiro,KieranSnyder,4
+danshapiro,Kristen_Hammy,4
+danshapiro,PeterHamilton,7
+medinism,hadip,7
+medinism,SoGulley,4
+KieranSnyder,sonalpmane,7
+KieranSnyder,stevesi,9
+KieranSnyder,Kristen_Hammy,9
+KieranSnyder,nhuntwalker,4
+KieranSnyder,funcOfJoe,6
+KieranSnyder,SoGulley,5
+KieranSnyder,JenMsft,7
+hadip,sonalpmane,8
+hadip,Jenerationy,5
+hadip,stevesi,5
+hadip,funcOfJoe,8
+hadip,SoGulley,5
+hadip,jinman,5
+hadip,lanctot,6
+hadip,nhuntwalker,7
+hadip,mcolacurcio,7
+RajSinghSeattle,Ryanintheus,9
+RajSinghSeattle,funcOfJoe,8
+RajSinghSeattle,SoGulley,6
+RajSinghSeattle,stevesi,9
+funcOfJoe,stevesi,6
+kirbywinfield,Ryanintheus,6
+kirbywinfield,stevesi,7
+kirbywinfield,lanctot,8
+kirbywinfield,SoGulley,8
+kirbywinfield,sarahstood,7
+kirbywinfield,mcolacurcio,8
+stevesi,sonalpmane,7
+stevesi,JenMsft,5
+stevesi,Kristen_Hammy,5
+stevesi,jinman,9
+stevesi,lanctot,9
+stevesi,mcolacurcio,4
+Ryanintheus,JenMsft,7
+Ryanintheus,Jenerationy,7
+Ryanintheus,nhuntwalker,7
+Ryanintheus,sarahstood,4
+sonalpmane,SoGulley,6
+SoGulley,tarah,9
+SoGulley,Jenerationy,9
+SoGulley,PeterHamilton,4
+SoGulley,Kristen_Hammy,8
+SoGulley,nhuntwalker,6
+tarah,nhuntwalker,5
+Jenerationy,PeterHamilton,6
+Kristen_Hammy,mcolacurcio,8
+nhuntwalker,JenMsft,9
+PeterHamilton,mcolacurcio,8
