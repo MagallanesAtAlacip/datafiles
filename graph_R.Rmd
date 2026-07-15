@@ -1,0 +1,655 @@
+---
+title: "Reading a Social Network Honestly: Structure, Popularity, and Community in EliteNet"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center")
+```
+
+This talk uses a real Twitter interaction network among ~46 people in the Seattle tech/startup scene:
+393 undirected ties, weighted by `traffic` (interaction count), with two node attributes — `male`
+(binary) and `followers` (follower count).
+
+**The thesis of this talk:** a network plot is easy to make and easy to over-read. Every claim below —
+about assortativity, influence, or community — is first stated from a picture, then checked against the
+underlying math, because visuals can be made to look meaningful even when the number behind them says
+otherwise.
+
+# Open the files
+
+We generally need two (edges and node attributes).
+
+```{r load-libs}
+library(igraph)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggraph)
+library(tidygraph)
+library(scales)
+```
+
+```{r load-data}
+fileLink_edges      <- "https://github.com/MagallanesAtAlacip/datafiles/raw/main/edges.csv"
+fileLink_attributes <- "https://github.com/MagallanesAtAlacip/datafiles/raw/main/nodeattributes.csv"
+
+edges      <- read_csv(fileLink_edges, show_col_types = FALSE)
+attributes <- read_csv(fileLink_attributes, show_col_types = FALSE)
+```
+
+```{r show-edges}
+edges
+```
+
+```{r show-attrs}
+attributes
+```
+
+**What we're working with:** 46 nodes, 393 edges — no duplicates, no missing pairs. `traffic` is an
+edge weight (how often two people interacted); `male` and `followers` are node-level attributes we'll
+test for assortativity later.
+
+# Creating the Network from DataFrames
+
+Use the previous data frames to create the network. `graph_from_data_frame()` takes the edge list as the
+first argument and the node attribute table as `vertices` — this attaches `male` and `followers` to every
+node in one step, instead of the two-step dictionary approach some tools require.
+
+```{r build-graph}
+EliteNet <- graph_from_data_frame(edges, directed = FALSE, vertices = attributes)
+EliteNet
+```
+
+**A scoping decision:** `traffic` is stored as an edge attribute, but density, diameter, centrality, and
+community detection below are computed on the **unweighted** graph. This talk is about topological
+structure — who is reachable from whom, who bridges gaps, whether communities exist — and mixing in
+interaction volume would answer a different question ("who talks most"). Weighting by `traffic` is a
+legitimate follow-up analysis, just not this one.
+
+A view of edges and node attributes:
+
+```{r view-edges}
+head(igraph::as_data_frame(EliteNet, what = "edges"), 5)
+```
+
+```{r view-nodes}
+head(igraph::as_data_frame(EliteNet, what = "vertices"), 5)
+```
+
+A simple call to `plot()` will draw the graph:
+
+```{r naive-draw}
+plot(EliteNet, vertex.label = NA, vertex.size = 5, edge.color = "grey80")
+```
+
+This is the naive first look — no color, no attributes, no seed. It confirms a graph exists and nothing
+else. Every plot from here on earns its place by testing a specific claim.
+
+# Exploration of the network
+
+## Basic metrics
+
+### Connectedness
+
+A network is "connected" if there exists a *path* between any pair of nodes (undirected networks).
+
+```{r connected}
+is_connected(EliteNet)
+```
+
+**TRUE** — all 46 people are mutually reachable. That matters mechanically, too: `diameter()` on a
+disconnected graph in igraph returns `Inf` for the unreachable pairs rather than erroring, which would
+silently give a misleading "worst case" number — so this check is what makes the diameter figure below
+trustworthy, not just a formality.
+
+### Density
+
+From 0 to 1, where 1 makes it a "complete" network: there is a link between every pair of nodes.
+
+```{r density}
+edge_density(EliteNet)
+```
+
+**0.38.** Of the 1,035 possible pairs among 46 people, 393 (38%) are actually connected. For a social
+network at this scale, that's dense — this reads less like a loose follower graph and more like a tight,
+high-contact group who mostly already know each other.
+
+### Diameter
+
+When two vertices are connected, one can reach the other using multiple edges. The geodesic is the
+shortest path between two connected vertices. The diameter is the maximum geodesic in a network.
+
+> That is the worst-case scenario for a person to reach another: having `diameter - 1` intermediaries.
+
+```{r diameter}
+diameter(EliteNet)
+```
+
+**3.** The longest shortest path between any two people is 3 hops — worst case, you reach anyone through
+at most 2 intermediaries. Paired with the density above: this is a small, tightly-knit elite, not a
+sparse network with a few long bridges.
+
+## Visuals
+
+Visuals are key for complementary analysis. But it is not an easy task.
+
+### Assortativity
+
+Assortativity measures whether nodes tend to connect to other nodes similar to themselves. Closer to 1
+means higher assortativity, closer to -1 means disassortativity, while 0 is no assortativity.
+Assortativity can be measured in three complementary ways.
+
+**a. Categorical assortativity:** tendency for nodes to connect with other nodes sharing the same
+category.
+
+```{r assort-gender}
+# igraph's assortativity_nominal needs integer category codes starting at 1
+gender_types <- V(EliteNet)$male + 1
+assortativity_nominal(EliteNet, types = gender_types, directed = FALSE)
+```
+
+> With r ~ 0.043, gender is effectively irrelevant: same-sex and cross-sex ties are distributed no
+> differently than chance would predict.
+
+Layouts help show the complexity of a graph without becoming an analytical tool on their own. If patterns
+are not shockingly clear, eye bias may lead us to interpret visual artifacts as if they meant something.
+
+Let's prepare a layout to see if we can effectively interpret the close-to-zero value of assortativity
+for the `male` attribute — coloring nodes by gender to see if the (lack of) pattern is visible:
+
+```{r gender-layout}
+set.seed(42)
+lay <- layout_with_fr(EliteNet, niter = 2000)
+
+plot(EliteNet, layout = lay,
+     vertex.color = ifelse(V(EliteNet)$male == 1, "#4C72B0", "#DD8452"),
+     vertex.label = NA, vertex.size = 6, edge.color = "grey85")
+```
+
+A next step is to look at the edge pattern directly. Let's split the edges into same-sex and cross-sex:
+
+```{r same-cross-sex}
+el <- as_edgelist(EliteNet, names = FALSE)
+male_vec <- V(EliteNet)$male
+
+same_sex  <- el[male_vec[el[,1]] == male_vec[el[,2]], , drop = FALSE]
+cross_sex <- el[male_vec[el[,1]] != male_vec[el[,2]], , drop = FALSE]
+
+plot(EliteNet, layout = lay,
+     vertex.color = ifelse(V(EliteNet)$male == 1, "#4C72B0", "#DD8452"),
+     vertex.label = NA, vertex.size = 6,
+     edge.color = NA)
+
+# cross-sex edges first, in grey
+plot(graph_from_edgelist(cross_sex, directed = FALSE), layout = lay, add = TRUE,
+     vertex.label = NA, vertex.size = 6, vertex.color = NA,
+     edge.color = adjustcolor("grey60", alpha.f = 0.5))
+
+# same-sex edges on top, in crimson
+plot(graph_from_edgelist(same_sex, directed = FALSE), layout = lay, add = TRUE,
+     vertex.label = NA, vertex.size = 6, vertex.color = NA,
+     edge.color = adjustcolor("firebrick", alpha.f = 0.6))
+```
+
+Can you detect if gender homophily exists? Do the red same-sex edges cluster within color groups, or are
+they scattered randomly?
+
+Most of the time, visuals require knowing what math actually happened behind the scenes. In this case,
+assortativity needs a simple cross-tabulation as the initial input:
+
+```{r mixing-matrix}
+male_named <- setNames(V(EliteNet)$male, V(EliteNet)$name)
+el_names <- as_edgelist(EliteNet, names = TRUE)
+
+mix <- table(male_named[el_names[,1]], male_named[el_names[,2]])
+mix
+```
+
+`mix` is a raw crosstab of edge endpoints by `male` — not yet symmetrized or normalized. Because the
+graph is undirected, an edge listed as (female, male) and one listed as (male, female) mean the same
+thing, so we symmetrize before normalizing:
+
+```{r mixing-matrix-sym}
+mix_sym <- (mix + t(mix)) / 2
+mix_sym
+```
+
+```{r mixing-matrix-norm}
+M <- mix_sym / sum(mix_sym)
+M
+```
+
+| Cell     | Meaning                                      |
+| -------- | --------------------------------------------- |
+| `M[1,1]` | Fraction of edges connecting female <-> female |
+| `M[1,2]` | Fraction of edges connecting female <-> male   |
+| `M[2,1]` | Fraction of edges connecting male <-> female   |
+| `M[2,2]` | Fraction of edges connecting male <-> male     |
+
+We can compute assortativity from the table directly, matching Newman's formula:
+
+```{r manual-assort}
+a <- rowSums(M)
+r_manual <- (sum(diag(M)) - sum(a^2)) / (1 - sum(a^2))
+r_manual
+```
+
+| Line                | What it does                  | Mathematical meaning                                                    |
+| -------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| `a <- rowSums(M)`    | Row sums of the mixing matrix | $a_i = \sum_j e_{ij}$ — fraction of all edge-ends attached to group $i$   |
+| `sum(diag(M))`       | Sum of diagonal elements      | $\sum_i e_{ii}$ — fraction of same-type edges                            |
+| `sum(a^2)`           | Sum of squared marginals      | $\sum_i a_i^2$ — what the diagonal would be under independence           |
+| `1 - sum(a^2)`       | Denominator                   | Normalization factor — maximum possible deviation from independence      |
+
+$$r = \frac{\sum_i e_{ii} - \sum_i a_i^2}{1 - \sum_i a_i^2}$$
+
+This matches `assortativity_nominal()` above, confirming the built-in function isn't a black box. A
+simple heatmap makes the lack of assortativity visible:
+
+```{r mixing-heatmap}
+M_df <- as.data.frame(as.table(M))
+colnames(M_df) <- c("row", "col", "value")
+
+ggplot(M_df, aes(x = col, y = row, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = round(value, 3)), color = "white") +
+  scale_fill_viridis_c(limits = c(0, 0.5)) +
+  labs(x = NULL, y = NULL, fill = "fraction") +
+  theme_minimal()
+```
+
+**b. Assortativity (numerical):**
+
+```{r assort-followers}
+assortativity(EliteNet, values = V(EliteNet)$followers, directed = FALSE)
+```
+
+> The result above suggests no disassortativity by follower count. Value too close to zero.
+
+```{r followers-layout}
+followers_vec <- V(EliteNet)$followers
+node_sizes <- 3 + log1p(followers_vec) * 1.2
+
+plot(EliteNet, layout = lay,
+     vertex.color = adjustcolor("#4C72B0", alpha.f = 0.7),
+     vertex.size = node_sizes, vertex.label = NA,
+     edge.color = "grey85")
+```
+
+It is not easy to read the lack of assortativity off the plot above. Again: reflect on what we're
+representing mathematically. The question is `do popular people tend to connect with popular people?`
+or `with unpopular ones?` Let's look at the edge behavior directly:
+
+```{r followers-pairs}
+pairs_df <- data.frame(
+  u_fol = followers_vec[el[,1]],
+  v_fol = followers_vec[el[,2]]
+)
+
+cor(pairs_df$u_fol, pairs_df$v_fol)
+```
+
+Note: unlike a directed edge list from a pandas-style source, `igraph::assortativity()` already treats
+the graph as undirected internally and symmetrizes both edge directions before correlating — so the
+number above from a naive `u`/`v` correlation on a single, arbitrarily-ordered edge list can differ
+slightly from `assortativity()`'s own result. To see the "true" symmetric version by hand, add both
+directions explicitly, exactly like the built-in function does:
+
+```{r followers-pairs-sym}
+pairs_sym <- rbind(
+  data.frame(u_fol = followers_vec[el[,1]], v_fol = followers_vec[el[,2]]),
+  data.frame(u_fol = followers_vec[el[,2]], v_fol = followers_vec[el[,1]])
+)
+
+cor(pairs_sym$u_fol, pairs_sym$v_fol)
+```
+
+Now we can use `pairs_sym` for the scatter plot:
+
+```{r followers-scatter}
+ggplot(pairs_sym, aes(x = u_fol, y = v_fol)) +
+  geom_point(alpha = 0.25, color = "grey40") +
+  geom_smooth(method = "lm", color = "darkorange", se = TRUE) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", alpha = 0.5) +
+  labs(x = "u followers", y = "v followers",
+       title = "Follower count of connected pairs") +
+  theme_minimal()
+```
+
+**c. Degree assortativity:** connections based on a different kind of popularity — becoming a hub or a
+spoke.
+
+```{r assort-degree}
+assortativity_degree(EliteNet, directed = FALSE)
+```
+
+> The result above suggests disassortativity: poorly-connected nodes tend to connect with
+> highly-connected ones.
+
+```{r degree-layout}
+deg <- degree(EliteNet)
+node_sizes_deg <- 3 + log1p(deg) * 3
+
+plot(EliteNet, layout = lay,
+     vertex.color = deg, vertex.size = node_sizes_deg, vertex.label = NA,
+     edge.color = "grey85")
+```
+
+We can use degree the same way we used followers as a node attribute:
+
+```{r degree-excess}
+deg_u <- deg[el[,1]] - 1
+deg_v <- deg[el[,2]] - 1
+
+pairs_excess <- rbind(
+  data.frame(u_excess = deg_u, v_excess = deg_v),
+  data.frame(u_excess = deg_v, v_excess = deg_u)
+)
+
+cor(pairs_excess$u_excess, pairs_excess$v_excess)
+```
+
+When computing degree assortativity, we subtract 1 because the edge you're standing on is already spent.
+The question is not "do popular people have popular friends?" but "given this friendship, do their
+*remaining* friendships cluster?" The `-1` accounts for the connection you've already used to get there.
+
+```{r degree-excess-plot}
+ggplot(pairs_excess, aes(x = u_excess, y = v_excess)) +
+  geom_hex(bins = 15) +
+  scale_fill_viridis_c(option = "viridis", direction = -1) +
+  labs(title = "Excess degree of connected pairs") +
+  theme_minimal()
+```
+
+# Exploration of network nodes
+
+- **Eigenvector centrality** tells you how well-connected a vertex is; vertices with the highest values
+  are the most influential, as they connect to other well-connected vertices.
+- **Closeness** tells you how close a vertex is to every other vertex. A vertex with high closeness can
+  share information faster than the rest.
+- **Betweenness** tells you how critical a vertex is for connecting vertices that aren't directly
+  connected.
+
+```{r centrality}
+eig  <- eigen_centrality(EliteNet)$vector
+clos <- closeness(EliteNet)
+betw <- betweenness(EliteNet)
+
+DFCentrality <- data.frame(
+  person      = V(EliteNet)$name,
+  Eigenvector = eig,
+  Closeness   = clos,
+  Betweenness = betw
+)
+
+head(DFCentrality)
+```
+
+One note on the plot below: raw eigenvector values span a wide range and, plotted linearly, small
+differences near the bottom disappear. Rather than an unexplained exponent, we min-max scale eigenvector
+centrality to a fixed marker-size range (2-10) — the transform is linear and documented, so size
+differences you see are proportional to the underlying centrality, not an artifact of the scaling choice.
+
+```{r centrality-scatter}
+eig_min <- min(DFCentrality$Eigenvector)
+eig_max <- max(DFCentrality$Eigenvector)
+DFCentrality$size <- 2 + 8 * (DFCentrality$Eigenvector - eig_min) / (eig_max - eig_min)
+
+ggplot(DFCentrality, aes(x = Betweenness, y = Closeness, size = size, label = person)) +
+  geom_point(alpha = 0.5, color = "#4C72B0") +
+  geom_text(size = 2.5, alpha = 0.6, vjust = -1) +
+  scale_size_identity() +
+  labs(title = "Centrality scatterplot (size = eigenvector centrality, linearly scaled)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+The previous results tell us that a couple of people are salient:
+
+```{r top-hubs}
+top_hubs <- DFCentrality %>% arrange(desc(Eigenvector)) %>% head(2) %>% pull(person)
+top_hubs
+```
+
+Let's highlight those:
+
+```{r hub-plot}
+hub_flag <- V(EliteNet)$name %in% top_hubs
+
+plot(EliteNet, layout = lay,
+     vertex.label = ifelse(hub_flag, V(EliteNet)$name, NA),
+     vertex.label.cex = 0.8, vertex.label.color = "blue",
+     vertex.color = ifelse(hub_flag, "red", "grey70"),
+     vertex.size = ifelse(hub_flag, 8, 4),
+     edge.color = adjustcolor("grey70", alpha.f = 0.3))
+```
+
+# Communities
+
+Before hunting for communities, we first ask: does EliteNet have more triangles than chance would
+produce? If not, any "communities" we find might be algorithmic artifacts — patterns forced by the
+algorithm rather than real social structure. Transitivity measures "friend of a friend is a friend" —
+the raw material for communities. We compare EliteNet to a random null model with the same number of
+nodes and edges. If the ratio is near 1, triangles are random noise. If it's significantly higher,
+communities are structurally possible.
+
+```{r transitivity-null}
+elite_trans <- transitivity(EliteNet, type = "global")
+cat(sprintf("EliteNet transitivity: %.4f\n", elite_trans))
+
+n <- vcount(EliteNet)
+m <- ecount(EliteNet)
+
+set.seed(123)
+random_transitivities <- replicate(100, transitivity(sample_gnm(n, m), type = "global"))
+
+cat(sprintf("Random transitivity:   %.4f +/- %.4f\n",
+            mean(random_transitivities), sd(random_transitivities)))
+cat(sprintf("Ratio Elite/Random:    %.2f\n", elite_trans / mean(random_transitivities)))
+```
+
+EliteNet's transitivity is meaningfully higher than random — triangles are genuinely overrepresented.
+Communities have structural raw material; detection is worth pursuing.
+
+A more complex algorithm is [Louvain](https://perso.uclouvain.be/vincent.blondel/research/louvain.html):
+
+```{r louvain}
+set.seed(123)
+partition_louvain <- cluster_louvain(EliteNet)
+length(partition_louvain)
+```
+
+```{r add-community-attr}
+V(EliteNet)$community <- membership(partition_louvain)
+head(igraph::as_data_frame(EliteNet, what = "vertices"))
+```
+
+```{r community-plot}
+set.seed(42)
+lay2 <- layout_with_fr(EliteNet, niter = 2000)
+
+plot(EliteNet, layout = lay2,
+     vertex.color = V(EliteNet)$community,
+     vertex.label = NA, vertex.size = 6,
+     edge.color = adjustcolor("grey60", alpha.f = 0.2),
+     main = sprintf("Louvain communities (n = %d)", length(partition_louvain)))
+```
+
+**Modularity Q:** if we get positive values (1 being the top value), we can consider there to be good
+community structure ([wiki](https://en.wikipedia.org/wiki/Modularity_(networks))). The higher the
+modularity, the denser the connections within a partition and the sparser the connections between
+partitions.
+
+```{r modularity}
+modularity(EliteNet, membership(partition_louvain))
+```
+
+| Modularity Q | Interpretation                                 |
+| ------------ | ------------------------------------------------ |
+| < 0.3        | Weak/no meaningful communities                    |
+| 0.3 - 0.7    | Moderate community structure                      |
+| > 0.7        | Strong communities (possibly over-partitioned)    |
+
+> Louvain found communities, but modularity is only ~0.11 — well below the 0.3 threshold. The
+> communities are algorithmic output, not strong social structure. This aligns with what we found
+> earlier: no gender assortativity, no follower assortativity, and only degree disassortativity.
+> EliteNet lacks the homophily that typically drives real communities.
+
+**Robustness check: does the choice of algorithm matter?** If EliteNet had strong, real community
+structure, different community-detection algorithms should broadly agree on it. Let's check Louvain
+against three other common algorithms:
+
+```{r algo-comparison}
+set.seed(123)
+algos <- list(
+  Louvain          = partition_louvain,
+  Walktrap         = cluster_walktrap(EliteNet),
+  "Fast-greedy"    = cluster_fast_greedy(EliteNet),
+  "Edge-betweenness" = cluster_edge_betweenness(EliteNet),
+  Infomap          = cluster_infomap(EliteNet)
+)
+
+algo_table <- data.frame(
+  algorithm    = names(algos),
+  n_communities = sapply(algos, length),
+  modularity   = round(sapply(algos, function(a) modularity(EliteNet, membership(a))), 4)
+)
+algo_table
+```
+
+They don't agree. Modularity ranges from `0` (infomap finds *no* structure — everyone in one community)
+to `~0.11` (Louvain and fast-greedy), and the number of communities ranges from 1 to 9 depending purely
+on which algorithm is asked. If the community structure were real and strong, these algorithms — which
+optimize different objectives — would converge on roughly the same partition. Instead, each one carves
+the network differently, which is itself evidence for weak structure, not just the low Q value from any
+single algorithm. Louvain is used below because it's the most common default and lands in the middle of
+this range, not because it "won."
+
+```{r community-density-matrix}
+mem <- membership(partition_louvain)
+k <- length(partition_louvain)
+sz <- as.integer(table(mem))
+
+comm_edges <- matrix(0, k, k)
+el_num <- as_edgelist(EliteNet, names = FALSE)
+mem_num <- as.integer(mem)
+for (i in seq_len(nrow(el_num))) {
+  cu <- mem_num[el_num[i,1]]; cv <- mem_num[el_num[i,2]]
+  comm_edges[cu,cv] <- comm_edges[cu,cv] + 1
+  comm_edges[cv,cu] <- comm_edges[cv,cu] + 1
+}
+dens <- comm_edges
+for (i in 1:k) for (j in 1:k) dens[i,j] <- dens[i,j] / (sz[i] * sz[j])
+
+dens_df <- as.data.frame(as.table(round(dens, 3)))
+colnames(dens_df) <- c("comm_i", "comm_j", "density")
+
+ggplot(dens_df, aes(x = comm_j, y = comm_i, fill = density)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = density), color = "white", size = 3) +
+  scale_fill_viridis_c() +
+  labs(x = NULL, y = NULL) +
+  theme_minimal()
+```
+
+The diagonal is denser than the off-diagonal — communities are not pure fiction. But the off-diagonal is
+far from empty. Let's add the `ratio`: community-internal density divided by the max density to any other
+community.
+
+```{r community-ratios}
+ratios <- sapply(1:k, function(i) dens[i,i] / max(dens[i, -i]))
+
+ratio_table <- data.frame(
+  community    = 1:k,
+  size         = sz,
+  internal     = round(diag(dens), 3),
+  max_external = round(sapply(1:k, function(i) max(dens[i, -i])), 3),
+  ratio        = round(ratios, 2)
+)
+ratio_table
+```
+
+The strongest community has an internal/external density ratio still under 2:1. Real social communities
+typically show ratios of 5:1 or higher. At under 2:1, these are weak, leaky territorial boundaries.
+
+Finally, a `ggraph` layout grouped by community — the R analogue of a forced community layout:
+
+```{r ggraph-community}
+tg <- as_tbl_graph(EliteNet)
+
+ggraph(tg, layout = "stress") +
+  geom_edge_link(alpha = 0.15, color = "grey50") +
+  geom_node_point(aes(color = factor(community)), size = 4) +
+  scale_color_brewer(palette = "Set2", name = "community") +
+  theme_void()
+```
+
+`ggraph` produces neat, separated clusters. But this is algorithmic force, not social reality. The layout
+engine was told to group by community, so it groups by community.
+
+Compare that against igraph's native convex-hull community plot, which draws boundaries around the
+*given* partition on an ordinary force-directed layout, without artificially pulling communities apart:
+
+```{r hull-community, fig.width=10, fig.height=5}
+par(mfrow = c(1, 2))
+
+plot(partition_louvain, EliteNet, layout = lay2,
+     vertex.label = NA, vertex.size = 6,
+     main = "With convex hulls (honest)")
+
+plot(EliteNet, layout = lay2,
+     vertex.color = V(EliteNet)$community, vertex.label = NA, vertex.size = 6,
+     edge.color = adjustcolor("grey60", alpha.f = 0.2),
+     main = "Colored points only")
+```
+
+This is the more honest picture. The hulls overlap almost completely — that overlap *is* the "weak,
+leaky boundaries" argument, visible without needing the Q value or the ratio table to explain it. The
+math tells the real story: `Q ~ 0.11`, ratios under `2:1`. Visuals can always be forced to look clean
+(as the `ggraph` layout above does); the math — and, here, an honestly-drawn plot — protects us from that
+illusion.
+
+One more example of forcing, from the opposite direction. A hive layout puts every node on an axis
+assigned by a category — here, Louvain community — sorted by another variable — here, degree. The layout
+doesn't ask whether that category is a good one; it enforces the axis assignment mechanically, regardless
+of whether the communities are real:
+
+```{r hive-plot, fig.width=8, fig.height=8}
+V(EliteNet)$louvain <- factor(V(EliteNet)$community)
+V(EliteNet)$degree  <- degree(EliteNet)
+
+ggraph(EliteNet, layout = "hive",
+       axis = louvain,
+       sort.by = degree) +
+  geom_edge_hive(color = "grey80", alpha = 0.25) +
+  geom_axis_hive(aes(colour = louvain), label = FALSE) +
+  geom_node_point(aes(colour = louvain)) +
+  geom_node_text(aes(label = name), repel = TRUE, max.overlaps = 50, size = 2.5) +
+  coord_fixed() +
+  theme_void()
+```
+
+This is the tell, not a failed plot. A hive layout only reads cleanly when between-axis edges are the
+minority — the arcs are supposed to highlight a few exceptional cross-group ties against a background of
+within-group structure. Here, 261 of 393 edges (67%) run *between* communities, so the arcs aren't
+exceptions, they're most of the graph. The layout still dutifully assigns every node to an axis — the
+mechanism doesn't care whether the grouping is meaningful — but the resulting clutter is the data
+resisting the imposed structure. Where the `ggraph` "stress" layout forces the network to *look*
+organized by pulling communities apart, the hive layout forces the same weak communities into axes and
+lets the mess show through instead. Same underlying finding, opposite failure mode.
+
+# Takeaway
+
+Every layer of this talk pointed the same direction: gender doesn't predict ties (r ~ 0.04), follower
+count doesn't predict ties (r ~ -0.05), popular people are slightly more likely to connect to
+less-popular ones (r ~ -0.25), and the Louvain communities are statistically real but weak (Q ~ 0.11,
+internal/external density ratios under 2:1 versus the ~5:1 expected of genuine social communities). None
+of that is visible in a force-directed layout or a `ggraph` cluster plot on their own — the visuals only
+became trustworthy once paired with the numbers behind them. That's the whole method: plot it, then check
+it.

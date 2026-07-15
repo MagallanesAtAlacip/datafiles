@@ -1,0 +1,73 @@
+---
+title: "Functional Visualization Approach"
+output: html_document
+---
+
+# Retrieve the data
+
+Link to file:
+
+```{r}
+wideLink <- "https://github.com/MagallanesAtAlacip/datafiles/raw/main/covid_fatalities2021_yearly_wide.csv"
+```
+
+Reading from link:
+
+```{r}
+covidPeru_wide <- read.csv(wideLink)
+head(covidPeru_wide)
+```
+
+```{r}
+str(covidPeru_wide)
+```
+
+As you see, each row is a province. Then each column as a specific count. for example:
+
+> The first cell next to ABANCAY tells there were **15** fatalities which were less than 40 in the year 2020.
+
+A functional approach can work well with this:
+
+```{r}
+# 2. Prepare numeric wide data (Drop the first column "PROVINCIA")
+numeric_data <- covidPeru_wide[, -1]
+
+boxplot(numeric_data,
+        names = names(numeric_data))
+```
+
+The `boxplot()` function accepts more arguments;
+
+```{r}
+boxplot(numeric_data,
+        horizontal = TRUE,
+        las = 1)
+```
+
+Logging 'x':
+
+```{r}
+
+boxplot(numeric_data,
+        horizontal = TRUE,                            # horizontal=TRUE is vert=False
+        log = "x",                                    # Appies log scale to X-axis
+        las = 1,                                      # las=1 keeps text horizontal (readable)
+        xlab = "Count")
+```
+
+R base plots do not handle log(0) well; We need the `+1` trick:
+
+```{r}
+# Add 1 to all your data to eliminate the 0 problem safely
+logged_data <- numeric_data + 1
+
+# Plot using the modified data
+boxplot(logged_data,
+        horizontal = TRUE,
+        las = 1,
+        log = "x",      # R can now scale it perfectly
+        col = "skyblue")     # Hide the axis so we can label it nicely
+```
+
+
+
