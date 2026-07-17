@@ -1,0 +1,661 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+<br> 
+<center><img src="https://i.imgur.com/AbCCpQO.png" width="700"></center>
+
+
+_____
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  fig.align = "center",
+  out.width = "90%"
+)
+```
+
+# Text Data
+_____
+
+Text can also be visualized, but unlike numeric variables, text usually needs some extra preparation before plotting. Words appear in different forms, some words are very common but not very informative, and some meaningful ideas are expressed as phrases rather than as single words.
+
+In this final session, you will learn a simple workflow for visualizing text data. We will begin with **word frequencies**, and then compare different graphical options:
+
+- word clouds
+- ranked bar charts
+- lollipop charts
+- treemaps
+- topic models
+- co-occurrence networks
+
+The goal is not only to produce attractive plots, but also to understand what each plot is good for.
+
+## 1. Get the text data
+
+Let us begin with a data frame containing some old tweets from D.Trump:
+
+```{r}
+rm(list = ls())
+
+link1 = "https://github.com/DACSS-Visual/basicText/"
+link2 = "raw/main/trumps.csv"
+
+trumpLink = paste0(link1, link2)
+allTweets = read.csv(trumpLink, stringsAsFactors = FALSE)
+```
+
+The data has these columns:
+
+```{r}
+names(allTweets)
+```
+
+The column with the tweet text contains entries like these:
+
+```{r}
+head(allTweets$text, 2)
+```
+
+## 2. Select the observations of interest
+
+This data frame has several columns that allow subsetting. In this example, I will keep only tweets that are **not retweets**:
+
+```{r}
+SomeTrumpTweets = allTweets[allTweets$is_retweet == FALSE, ]
+SomeTrumpTweets = SomeTrumpTweets[, c("created_at", "text")]
+
+head(SomeTrumpTweets, 3)
+```
+
+At this point, we still have complete text messages. To visualize text, we first need to break each message into smaller units.
+
+## 3. Turn text into plottable words
+
+This process starts by what is called **tokenization**: splitting phrases into individual words.
+
+```{r}
+library(dplyr)
+library(tidytext)
+
+SomeTrumpTweets |>
+  unnest_tokens(
+    output = EachWord,
+    input  = text,
+    token  = "words"
+  ) |>head()
+```
+
+Notice that we named a new column `EachWord`, and in fact it has just one word from the tweet. The tweet message has been splitted or expanded into multiple rows, one row per word. It is useful to keep track of which tweet each word came from, like a long format ID. Currently, the `created_at` might work, but a simpler solution is to create a sequential ID:
+
+```{r}
+SomeTrumpTweets|>
+  mutate(tweet_id = row_number())|>
+  unnest_tokens(
+    output = EachWord,
+    input  = text,
+    token  = "words"
+  ) |>head()
+```
+
+Let's save that object:
+```{r}
+WordsIn_SomeTrumpTweets = SomeTrumpTweets|>
+  mutate(tweet_id = row_number())|>
+  unnest_tokens(
+    output = EachWord,
+    input  = text,
+    token  = "words"
+  )
+```
+
+Notice that the date is repeated for every word coming from the same tweet.
+
+How many word-tokens do we have now?
+
+```{r}
+nrow(WordsIn_SomeTrumpTweets)
+```
+
+This number includes repeated words, which is useful because frequency is often our first summary of text. We still have some pending pre processing.
+
+### 3.1. Remove common words: stopwords
+
+Many very frequent words carry little substantive meaning. Words such as *the*, *and*, *of*, or *to* are useful for grammar, but not always useful for analysis. These are called **stopwords**.
+
+```{r}
+data(stop_words)
+head(stop_words)
+```
+
+Now let us remove them:
+
+```{r}
+WordsIn_SomeTrumpTweets = WordsIn_SomeTrumpTweets |>
+  anti_join(stop_words, by = c("EachWord" = "word"))
+
+nrow(WordsIn_SomeTrumpTweets)
+```
+
+After removing stopwords, the number of rows decreases because many very common words are filtered out.
+
+This does **not** mean the remaining words are automatically important. It only means we are removing words that are usually too general to help interpretation.
+
+## 3.2. Getting rid of other unneeded words
+
+Take a look at the most repeated words (tokens):
+```{r}
+sort(table(WordsIn_SomeTrumpTweets$EachWord))|>tail(10)
+```
+
+
+Then we can safely drop some of those:
+
+```{r}
+badWords = c("https", "t.co")
+
+WordsIn_SomeTrumpTweets_clean = WordsIn_SomeTrumpTweets |>
+  filter(!EachWord %in% badWords) 
+```
+
+Now, let's keep the ones that appeared more than 4 times:
+
+```{r}
+moreThan_4 = WordsIn_SomeTrumpTweets_clean|>
+  count(EachWord, name = "Counts", sort = TRUE) |>
+  filter(Counts > 4)
+
+head(moreThan_4, 10)
+```
+
+These are the words that appear most often after basic cleaning.
+
+Before moving to more decorative plots, it is useful to begin with the clearest graph possible.
+
+## 4. Options for plots
+
+### 4.1. Ranked bar chart
+
+A ranked bar chart is usually the best option when the goal is **comparison**.
+
+```{r}
+library(ggplot2)
+
+top_words = moreThan_4 |>
+  slice_head(n = 15)
+
+ggplot(top_words,
+       aes(x = reorder(EachWord, Counts), y = Counts)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    x = "",
+    y = "Count",
+    title = "Most frequent words"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+This plot is very useful because it allows precise comparison. You can clearly see:
+
+- which words are most frequent
+- their ranking
+- the size of the differences between them
+
+For comparing frequencies, bar charts are usually better than word clouds.
+
+### 4.2. Lollipop chart
+
+A lollipop chart shows the same information as a bar chart, but with a lighter appearance.
+
+```{r}
+ggplot(top_words,
+       aes(x = reorder(EachWord, Counts), y = Counts)) +
+  geom_segment(aes(xend = EachWord, y = 0, yend = Counts)) +
+  geom_point(size = 3) +
+  coord_flip() +
+  labs(
+    x = "",
+    y = "Count",
+    title = "Most frequent words: lollipop chart"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+This chart still prioritizes ranking and comparison, but it uses less visual weight than bars.
+
+### 4.1. Word cloud
+
+Now let us build the word cloud.
+
+```{r, fig.height=7}
+library(ggwordcloud)
+
+ggplot(moreThan_4,
+       aes(label = EachWord,
+           size  = Counts,
+           color = Counts)) +
+  geom_text_wordcloud_area(eccentricity = 0.7, 
+                           rm_outside = TRUE) +
+  scale_size_area(max_size = 18) +
+  scale_color_gradient(low = "red", high = "darkred") +
+  theme_minimal(base_size = 16) +
+  labs(title = "Word cloud of frequent terms")
+```
+
+Word clouds are often visually attractive, but they are not ideal for accurate comparison. They are better for quick engagement and general impression than for careful measurement.
+
+### 4.2. Treemap
+
+A treemap is another way to represent frequencies, this time using **area** of rectangles.
+
+Install "treemapify" using this code:
+```{r}
+# install.packages("treemapify", type = "binary")
+```
+
+
+```{r}
+library(treemapify)
+
+ggplot(moreThan_4 |>
+         slice_head(n = 20),
+       aes(area = Counts, fill = Counts, label = EachWord)) +
+  geom_treemap() +
+  geom_treemap_text(place = "centre", colour = "white", reflow = TRUE) +
+  labs(title = "Word frequencies as a treemap") +
+  theme_minimal(base_size = 14)
+```
+
+Treemaps are compact and visually appealing, but they are not as precise as bars for comparing values.
+
+## 5. A second example: reading from a TXT file
+
+Not all text data comes from tweets. Sometimes you simply have a text file.
+
+Suppose we have this file:
+
+![](https://github.com/DACSS-Visual/basicText/blob/main/sometext.png?raw=true)
+
+We can read it like this:
+
+```{r}
+LinkText = "https://github.com/DACSS-Visual/basicText/raw/main/sometext.txt"
+otherText = read.delim(LinkText, header = FALSE)
+
+head(otherText)
+```
+
+Notice that a new row is created whenever a new paragraph or line break is found.
+
+Now let us tokenize the text and remove stopwords and the above discovered _badWords_:
+
+```{r}
+otherText_words = otherText |>
+  unnest_tokens(output = EachWord,
+                input  = V1,
+                token  = "words") |>
+  anti_join(stop_words, by = c("EachWord" = "word")) |>
+  filter(!EachWord %in% badWords)
+
+head(otherText_words, 20)
+```
+
+Now compute frequencies:
+
+```{r}
+txt_counts = otherText_words |>
+  count(EachWord, name = "Counts", sort = TRUE) |>
+  filter(Counts > 4) # filtered by count
+
+head(txt_counts, 10)
+```
+
+## 6. Other Plots beyond raw counts
+
+Once you have word counts or frequencies, you can prepare your word cloud:
+
+```{r, fig.height=7}
+ggplot(txt_counts,
+       aes(label = EachWord,
+           size  = Counts,
+           color = Counts)) +
+  geom_text_wordcloud_area(rm_outside = TRUE) +
+  scale_size_area(max_size = 18) +
+  scale_color_gradient(low = "red", high = "darkred") +
+  theme_minimal(base_size = 16) +
+  labs(title = "Word cloud from the TXT file")
+```
+ 
+And you ranked bars:
+
+```{r}
+txt_top15 = txt_counts |>
+  slice_head(n = 15)
+
+ggplot(txt_top15,
+       aes(x = reorder(EachWord, Counts), y = Counts)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    x = "",
+    y = "Count",
+    title = "Most frequent words in the text"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+You may also use proportions instead of raw values as labels (counts still are represented on Y axis):
+
+```{r}
+ggplot(txt_top15,
+       aes(x = reorder(EachWord, Counts), y = Counts)) +
+  geom_col() +
+  coord_flip() +
+  geom_text(
+    aes(label = paste0(round(100 * Counts / sum(Counts), 1), "%")),
+    nudge_y = 2
+  ) +
+  labs(
+    x = "",
+    y = "Count",
+    title = "Most frequent words in the text"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+However, other strategies beyond plotting frequencies are possible.
+
+### 6.1 Co-occurrence networks
+
+So far, we have treated words as isolated units. But language also has structure: some words tend to appear together.
+
+A simple way to explore this is through **bigrams**, that is, pairs of words that appear next to each other. The **`unnest_tokens()`** is used again, but requesting consecutive pairs:
+
+```{r}
+bigrams = SomeTrumpTweets |>
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+## see some
+bigrams |>head()
+```
+The output above is not ready yet, we need to split the pairs:
+
+```{r}
+library(tidyr)
+bigrams_inColumns = bigrams |>
+                    separate_wider_delim(bigram, 
+                                         names = c("word1", "word2"), 
+                                         delim = " ")
+bigrams_inColumns
+```
+
+Some cleaning and sorted counts:
+
+```{r}
+bigram_counts_clean = bigrams_inColumns|>
+                      filter(!word1 %in% stop_words$word,
+                             !word2 %in% stop_words$word) |>
+                      filter(!word1 %in% badWords,
+                             !word2 %in% badWords) |>
+                      count(word1, word2, sort = TRUE) |>
+                      filter(n >= 5)
+# see top
+bigram_counts_clean |> head(10)
+```
+
+
+#### 6.1.1 The creation of networks
+
+As we have pairs, we can think of each word as a network node. If word are nodes, a link between them means they co occur. Notice this network model allows that a word may be connected to more than one other word. 
+
+We need `igraph` here
+
+```{r}
+library(igraph)
+
+bigram_graph = graph_from_data_frame(bigram_counts_clean,directed = F)
+bigram_graph
+
+```
+
+Above you see new info. It is telling you the object `bigram_graph` is an IGRAPH object; it is an **U**ndirected network whose nodes or vertices have **N**ames (_UN_); its has 12 nodes and 7 vertices. The fact tat it is **U**ndirected means we do not care which word is before the other (that will be a directed network), we only care about co-occurrence.
+
+The _bigram_graph_ also has some attributes. It has `name` and `n`. The former is an **v**ertex (or node) attribute, and it is a **c**haracter, take a look:
+```{r}
+V(bigram_graph)$name
+```
+
+
+The latter (`n`) is an **e**dge attribute whose type is **n**umeric:
+```{r}
+E(bigram_graph)$n
+```
+
+
+This came from our counts column in `bigram_counts_clean`.
+
+You can easily produce a `bigram plot` like this:
+```{r}
+library(ggraph)
+ggraph::ggraph(bigram_graph ,layout="fr") +
+  geom_edge_link() +
+  geom_node_point() 
+```
+
+The hardest part of drawing networks is deciding where to place nodes. The fr layout helps by simulating attraction between connected nodes and repulsion among all nodes. This usually spreads the graph clearly while bringing related nodes together, making clusters and central nodes easier to see.
+
+We can improve this by adding names to the nodes:
+
+```{r}
+ggraph::ggraph(bigram_graph,layout="fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name))
+```
+
+
+We know that those edges have the _counts_ attribute (`n`). We can use the line `width` channel to present the weight:
+
+```{r}
+ggraph::ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(width = n)) +
+  geom_node_point() +
+  geom_node_text(aes(label = name))
+```
+
+Let's add some details for improvement:
+```{r}
+
+ggraph::ggraph(bigram_graph, layout = "fr") + theme_void() +
+  geom_edge_link(aes(width = n), alpha = 0.4, color='blue') +
+  geom_node_point(size = 4) +
+  geom_node_text(aes(label = name), repel = TRUE, size = 5) 
+  
+```
+
+
+This plot does not focus only on word frequency. Instead, it reveals **relationships between words**. That is often more meaningful than treating words separately.
+
+
+### 6.2 Topic models
+
+So far, we have focused on **individual words**: how often they appear, how they relate to other words, or how they can be visualized. But sometimes we are interested in something broader: the **main themes** discussed across many documents.
+
+This is where **topic models** become useful.
+
+A topic model is a statistical method that looks for groups of words that tend to appear together repeatedly across documents. When certain words frequently co-occur, the model interprets that pattern as a possible **topic**.
+
+For example, if many tweets contain words such as:
+
+- jobs  
+- economy  
+- workers  
+- manufacturing  
+
+the model may detect an **economic topic**.
+
+If another group repeatedly contains:
+
+- china  
+- trade  
+- tariffs  
+- imports  
+
+the model may detect a **trade policy topic**.
+
+The important point is that the model does **not** know these labels beforehand. It only detects patterns of word co-occurrence. Humans then inspect the results and assign meaningful interpretations.
+
+In short, instead of asking:
+
+> Which words are most frequent?
+
+topic models ask:
+
+> Which words tend to appear together across documents, suggesting an underlying theme?
+
+
+
+Here we need counting again. **BUT NOT THIS**
+
+```{r, eval=FALSE}
+# not run
+WordsIn_SomeTrumpTweets_clean |>
+  count(EachWord)
+```
+
+We used the previous code before to count how many times a word appears in the whole text (corpus).
+
+Now we need this:
+
+```{r}
+WordsIn_SomeTrumpTweets_clean |>
+  count(tweet_id, EachWord)|>head()
+```
+
+Here, we know how many times `each word appear inside each tweet`. Let me save that:
+
+```{r}
+countWordsPerTweets=WordsIn_SomeTrumpTweets_clean |>
+  count(tweet_id, EachWord)
+
+```
+
+The object `countWordsPerTweets` is still a regular data frame in **long format**. Each row contains:
+
+- one tweet (`tweet_id`)
+- one word (`EachWord`)
+- how many times that word appeared in that tweet (`n`)
+
+For example:
+
+| tweet_id | EachWord | n |
+|---------:|----------|--:|
+| 1        | alaska   | 1 |
+| 1        | jobs     | 2 |
+| 2        | biden    | 1 |
+
+This format is excellent for inspection and manipulation, but many text-mining models require a different structure: a **Document-Term Matrix** (DTM).
+
+
+```{r}
+library(topicmodels)
+
+tweet_DTM =
+  countWordsPerTweets|>
+  cast_dtm(
+    document = tweet_id,
+    term = EachWord,
+    value = n
+  )
+```
+
+`tweet_DTM` is a matrix created from the text counts where:
+
+- rows are documents (tweets)
+- columns are words
+- cells contain how many times each word appears in each tweet
+
+We have:
+```{r}
+tweet_DTM
+```
+
+The object `tweet_dtm` is a **Document-Term Matrix**. In this case, it contains **121 documents** (tweets) and **824 unique terms** (different words found after preprocessing). Each row represents one tweet, each column represents one word, and each cell records how many times that word appears in that tweet. The matrix is highly sparse: only **1,331 cells contain values**, while **98,373 cells are zero**, producing **99% sparsity**. This is normal in text data, especially with short documents such as tweets, because any single tweet uses only a small fraction of all possible words. The longest term in the vocabulary has **15 characters**, and the weighting system used is **term frequency (tf)**, meaning that the matrix stores simple word counts rather than transformed measures such as tf-idf.
+
+We can check a portion of the DTM:
+```{r}
+# library(tm)
+tm::inspect(tweet_DTM[1:5,1:10])
+```
+
+
+
+In this section of the matrix:
+
+- 13 cells contain values
+- 37 cells are zero
+- 74% sparsity means that most tweet-word combinations are absent
+
+A `0` means the word does not appear in the tweet (a tweet is a row)
+
+The next step is to estimate a **topic model** using the `LDA()` function. LDA stands for **Latent Dirichlet Allocation**, one of the most common methods for discovering hidden themes in a collection of documents. 
+
+In the code below, the model uses `tweet_DTM` as input, meaning it analyzes the matrix of tweets and word frequencies created earlier. The argument `k = 3` tells the model to search for **three topics**, so the tweets will be represented as mixtures of three underlying themes. Each topic is defined statistically by a group of words that tend to appear together across tweets. The option `control = list(seed = 1234)` sets a random seed so that the results can be reproduced exactly when the code is run again. In short, this command asks the model to examine patterns of word co-occurrence across tweets and summarize them into three latent topics.
+
+```{r}
+lda_model = LDA(tweet_DTM, k = 3, control = list(seed = 1234))
+```
+
+You get:
+```{r}
+lda_model
+```
+
+We can extract important information from `lda_model`:
+
+```{r}
+topics_terms_betas = tidy(lda_model, matrix = "beta")
+##see
+topics_terms_betas
+```
+
+The object `topics_terms_betas` shows the probability of each word within each topic. In other words, beta measures how strongly a word is associated with a topic. Very small values mean that the word is almost absent from that topic, while larger values indicate that the word is more characteristic of it. To interpret the model, we usually focus on the words with the highest beta values in each topic.
+
+
+
+Let us extract the most important terms in each topic:
+
+```{r}
+topics_terms_betas<-topics_terms_betas |>
+  group_by(topic) |>
+  slice_max(beta, n = 8) |>
+  ungroup()
+```
+
+To plot them nicely, we use a helper from `tidytext`:
+
+```{r, echo=FALSE}
+ggplot(topics_terms_betas,
+       aes(x = reorder_within(term, beta, topic),
+           y = beta)) +
+  geom_col() +
+  facet_wrap(~topic, scales = "free") +
+  scale_x_reordered() +
+  coord_flip() +
+  labs(
+    x = "",
+    y = "Beta",
+    title = "Top terms by topic"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+This is where we end. I hope you liked the journey!

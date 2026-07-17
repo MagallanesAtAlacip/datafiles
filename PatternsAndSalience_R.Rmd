@@ -1,0 +1,307 @@
+---
+title: "PatternsAndSalience"
+subtitle: "Dengue in Peru -- R / ggplot2 version of the Python / Altair notebook"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)   # dplyr, tidyr, ggplot2, readr, forcats, purrr
+```
+
+Let me get the data on dengue from [Peru](https://www.datosabiertos.gob.pe/dataset/vigilancia-epidemiol%C3%B3gica-de-dengue):
+
+```{r load-data}
+linkData <- "https://github.com/MagallanesAtAlacip/datafiles/raw/main/dengue_peru.csv"
+dengue <- read_csv(linkData)
+
+# checking format
+glimpse(dengue)
+```
+
+```{r explore-head}
+# Each row is a person:
+head(dengue)
+```
+
+```{r explore-enfermedad}
+# exploring
+dengue %>% count(enfermedad, sort = TRUE)
+```
+
+```{r explore-ano}
+# exploring
+summary(dengue$ano)
+```
+
+```{r explore-edad-grupos}
+# exploring
+dengue %>% count(edad_grupos)
+```
+
+# Univariate
+
+```{r univariate-agg}
+# Create aggregated data
+all_depts <- dengue %>%
+  count(departamento, name = "count") %>%
+  arrange(desc(count))
+
+all_depts
+```
+
+```{r univariate-plot}
+ggplot(all_depts, aes(x = count, y = fct_reorder(departamento, count))) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = count), hjust = -0.15, size = 3) +
+  labs(
+    title = "All Departments - Total Dengue Cases (Sorted)",
+    x = "Number of Cases", y = "Department"
+  ) +
+  xlim(0, max(all_depts$count) * 1.15) +
+  theme_minimal()
+```
+
+# Bivariate
+
+```{r bivariate-agg}
+# Age distribution by ALL departments
+age_dept <- dengue %>%
+  count(departamento, edad_grupos, name = "count")
+
+age_dept
+```
+
+```{r bivariate-grouped-bar}
+age_group_colors <- c(
+  "a_menor_a_16"  = "#1f77b4",
+  "b_entre_16y50" = "#ff7f0e",
+  "c_mayor_a_50"  = "#2ca02c"
+)
+
+ggplot(
+  age_dept,
+  aes(
+    x = fct_reorder(departamento, count, .fun = sum, .desc = TRUE),
+    y = count, fill = edad_grupos
+  )
+) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_manual(values = age_group_colors, name = "Age Group") +
+  labs(
+    title = "Age Distribution by All Departments (Grouped)",
+    x = "Department", y = "Number of Cases"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+```{r bivariate-heatmap}
+ggplot(
+  age_dept,
+  aes(
+    x = fct_reorder(departamento, count, .fun = sum, .desc = TRUE),
+    y = factor(edad_grupos, levels = c("a_menor_a_16", "b_entre_16y50", "c_mayor_a_50")),
+    fill = count
+  )
+) +
+  geom_tile() +
+  scale_fill_viridis_c(name = "Cases") +
+  labs(
+    title = "Heatmap: Age Groups by All Departments",
+    x = "Department", y = "Age Group"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+```{r bivariate-faceted}
+# Faceted bar chart by age group
+ggplot(
+  age_dept,
+  aes(x = count, y = fct_reorder(departamento, count, .fun = sum, .desc = TRUE))
+) +
+  geom_col() +
+  facet_wrap(~edad_grupos) +
+  labs(
+    title = "Age Distribution by Department",
+    x = "Number of Cases", y = "Department"
+  ) +
+  theme_minimal()
+```
+
+# Mining location
+
+Let's use *departamento* and *provincia*:
+
+```{r mining-location-wrangling}
+# --- Step 1: total cases per (year, departamento, provincia, enfermedad severity) ---
+ByYearPlace <- dengue %>%
+  group_by(ano, departamento, provincia, enfermedad) %>%
+  summarise(case = sum(case), .groups = "drop")
+
+# --- Step 2: pivot enfermedad categories into columns ---
+# values_fill = 0 is essential: if a province-year had zero cases of a given
+# severity (e.g. no 2_ALARMA that year), pivot_wider() would otherwise leave
+# NA there, and shareAlarma below would be NA instead of 0.
+ByYearPlace_wide <- ByYearPlace %>%
+  pivot_wider(names_from = enfermedad, values_from = case, values_fill = 0)
+
+# --- Step 3: share of ALARMA cases out of all cases, per province-year ---
+severity_cols <- unique(dengue$enfermedad)
+ByYearPlace_wide <- ByYearPlace_wide %>%
+  mutate(
+    sumCases = rowSums(across(all_of(severity_cols))),
+    shareAlarma = `2_ALARMA` / sumCases
+  )
+
+# --- Step 4: for each (year, departamento), find the provincia with the
+# highest ALARMA share -- i.e. the "worst" province that year ---
+# NOTE: ties (two provinces sharing the same max) are broken arbitrarily --
+# slice_max(..., with_ties = FALSE) keeps whichever row comes first, same
+# spirit as pandas' idxmax(). Check for ties with:
+# ByYearPlace_wide %>% group_by(ano, departamento) %>%
+#   summarise(n_tied = sum(shareAlarma == max(shareAlarma)), .groups = "drop") %>%
+#   filter(n_tied > 1)
+worst_prov_year <- ByYearPlace_wide %>%
+  group_by(ano, departamento) %>%
+  slice_max(shareAlarma, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+# --- Step 5: keep only cases where the "worst" province actually had
+# some ALARMA share (excludes departamento-years where no province
+# had any alarma cases at all, so the max would just be 0) ---
+worst_ProvYear_alarma <- worst_prov_year %>%
+  filter(shareAlarma > 0) %>%
+  select(departamento, provincia)
+
+# --- Step 6: count how many years each provincia was its departamento's
+# "worst" (highest ALARMA share) province, keep only provinces affected
+# more than 2 years ---
+worst_ProvYear_alarma_Frequency <- worst_ProvYear_alarma %>%
+  count(departamento, provincia, name = "yearsAffected") %>%
+  filter(yearsAffected > 2)
+
+worst_ProvYear_alarma_Frequency
+```
+
+```{r mining-location-plot}
+ggplot(
+  worst_ProvYear_alarma_Frequency,
+  aes(x = provincia, y = departamento, label = yearsAffected, size = yearsAffected)
+) +
+  geom_text(fontface = "bold") +
+  scale_size_area(max_size = 10, name = "yearsAffected") +
+  labs(x = "provincia", y = "departamento") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+Another plot
+
+```{r depa-heatmap-wrangling}
+# --- Step 1: total cases per (year, departamento, enfermedad severity) ---
+ByYearDepa <- dengue %>%
+  group_by(ano, departamento, enfermedad) %>%
+  summarise(case = sum(case), .groups = "drop")
+
+# --- Step 2: pivot enfermedad categories into columns ---
+# values_fill = 0: a departamento-year missing a severity category entirely
+# (e.g. no 2_ALARMA cases that year) becomes NA after pivot_wider(); fill
+# with 0 so the share computed below is 0, not NA.
+ByYearDepa_wide <- ByYearDepa %>%
+  pivot_wider(names_from = enfermedad, values_from = case, values_fill = 0)
+
+# --- Step 3: share of ALARMA cases out of all cases, per departamento-year ---
+ByYearDepaAlarm <- ByYearDepa_wide %>%
+  mutate(
+    sumCases = rowSums(across(all_of(severity_cols))),
+    alarmShare = `2_ALARMA` / sumCases
+  ) %>%
+  select(ano, departamento, alarmShare)
+
+# --- Step 4: keep only departamento-years with some ALARMA share ---
+ByYearDepaAlarm_focus <- ByYearDepaAlarm %>%
+  filter(alarmShare > 0)
+
+# --- Step 5: bin the continuous share into labeled levels ---
+# right-inclusive bins (cut()'s default, right = TRUE, matches pandas'
+# pd.cut() default exactly): (-1,.10], (.10,.25], (.25,.5], (.5,1]
+# NOTE: a share of exactly 0.10 falls into "a.below10%" (it's really
+# "at" 10%, not below) -- cosmetic edge case, doesn't affect the chart.
+edges <- c(-1, .10, .25, .5, 1)
+theLabels <- c("a.below10%", "b.11-25%", "c.26-50%", "d.above50%")
+ByYearDepaAlarm_focus <- ByYearDepaAlarm_focus %>%
+  mutate(alarmLevels = cut(alarmShare,
+    breaks = edges, labels = theLabels,
+    include.lowest = TRUE, right = TRUE
+  ))
+
+# --- Step 6: rank departamentos by frequency of "high alarm" years ---
+# "High alarm" = share > 0.5, i.e. essentially the 'd.above50%' bin exactly
+# (matching cut()'s right-inclusive boundary: a share of exactly 0.5 falls
+# in 'c.26-50%', not 'd', so the filter uses strict > to stay consistent).
+# This threshold is shared with the label-visibility rule in the plot
+# below, so row order and bold labels tell the same story: recurrence of
+# truly extreme years, not moderately high ones.
+high_alarm_threshold <- 0.5
+
+all_deptos <- unique(ByYearDepaAlarm_focus$departamento)
+
+high_alarm_order <- ByYearDepaAlarm_focus %>%
+  filter(alarmShare > high_alarm_threshold) %>%
+  count(departamento, name = "n") %>%
+  right_join(tibble(departamento = all_deptos), by = "departamento") %>%
+  mutate(n = replace_na(n, 0)) %>%
+  arrange(desc(n)) %>%
+  pull(departamento)
+
+# ggplot2 has no direct "sort=" encoding like Altair -- discrete axis order
+# is controlled by turning the column into a factor with the desired level
+# order.
+ByYearDepaAlarm_focus <- ByYearDepaAlarm_focus %>%
+  mutate(departamento = factor(departamento, levels = high_alarm_order))
+
+ByYearDepaAlarm_focus
+```
+
+```{r depa-heatmap-plot}
+# Colors approximating Vega's "lightgreyred" scheme (light grey -> dark
+# red); there is no exact built-in ggplot2/RColorBrewer equivalent, so
+# these are hand-picked to match the look of the original chart.
+alarm_colors <- c(
+  "a.below10%" = "#F0EEE9",
+  "b.11-25%"   = "#C9B29F",
+  "c.26-50%"   = "#E08E45",
+  "d.above50%" = "#C1440E"
+)
+
+final_chart <- ggplot(
+  ByYearDepaAlarm_focus,
+  aes(x = factor(ano), y = departamento, fill = alarmLevels)
+) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  # Numeric labels, reserved for the most extreme cells only (share > 0.5)
+  # -- same threshold as high_alarm_threshold above, so labels and row
+  # order tell one consistent story instead of pulling in different
+  # directions. An empty string for non-extreme cells is ggplot2's
+  # equivalent of Altair's opacity=0 trick -- nothing gets drawn.
+  # Format kept as raw decimal (not %) to match the original chart's
+  # density.
+  geom_text(
+    aes(label = ifelse(alarmShare > 0.5, sprintf("%.1f", alarmShare), "")),
+    fontface = "bold", size = 3.5, color = "black"
+  ) +
+  scale_fill_manual(values = alarm_colors, name = "alarmLevels") +
+  labs(
+    title = "Departamentos Ranked by Frequency of High-Alarm Years",
+    subtitle = "Sorted by count of years with alarma share > 50% (recurrence, not peak intensity)",
+    x = "ano", y = "departamento"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+final_chart
+```
+
+You can find different color schemes [here](https://vega.github.io/vega/docs/schemes/) (Vega/Altair) or via `RColorBrewer::display.brewer.all()` (R).

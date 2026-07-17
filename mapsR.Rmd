@@ -1,0 +1,262 @@
+---
+title: "Maps in R"
+output: html_document
+---
+
+```{r}
+# Check if multiple packages are installed
+packages <- c("sf", "ggplot2", "dplyr", "classInt","RColorBrewer","rgeoda")
+
+# show only missing packages
+missing_packages <- packages[!packages %in% installed.packages()[,1]]
+print(missing_packages)
+```
+
+```{r}
+# Installing
+# install.packages(c("sf", "classInt", "rgeoda"))
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(classInt)
+library(RColorBrewer)
+library(rgeoda)
+rm(list = ls())
+```
+
+# Load Data
+
+```{r}
+linkMap <- "https://github.com/MagallanesAtAlacip/datafiles/raw/main/mapaProvCovid.gpkg"
+
+# Read GeoJSON (equivalent to gpd.read_file)
+mapaProvCovid <- sf::read_sf(linkMap)
+
+# Check structure (equivalent to .info())
+str(mapaProvCovid)
+```
+
+```{r}
+# Check first rows (equivalent to .head())
+print(head(mapaProvCovid))
+```
+
+```{r}
+# Check CRS (equivalent to .crs)
+st_crs(mapaProvCovid)
+```
+
+```{r}
+# Check if projected (equivalent to .crs.is_projected)
+st_is_longlat(mapaProvCovid)  # TRUE if geographic (not projected)
+```
+
+```{r}
+# If reprojection needed:
+# mapaProvCovid_24892 <- st_transform(mapaProvCovid, 24892)
+```
+
+# Calculate Variables
+
+```{r}
+# Difference (non-normalized - wrong decision
+mapaProvCovid <- mapaProvCovid %>%
+  mutate(diffPOS_20_21 = positivos_2021 - positivos_2020)
+
+# 1. Calculate breaks
+breaks_nonor <- classIntervals(mapaProvCovid$diffPOS_20_21,
+                         n = 5,
+                         style = "quantile")$brks
+
+# 2. Create categorical variable
+mapaProvCovid$diff_cat <- cut(mapaProvCovid$diffPOS_20_21,
+                              breaks = breaks_nonor,
+                              include.lowest = TRUE)
+
+# 3. Plot with ggplot
+ggplot(mapaProvCovid) +
+  geom_sf(aes(fill = diff_cat)) +
+  scale_fill_brewer(palette = "YlOrRd")
+```
+
+```{r}
+# Ratio - (normalized (right decision)
+mapaProvCovid <- mapaProvCovid %>%
+  mutate(ratioPOS_20_21 = positivos_2021 / positivos_2020)
+
+# 1. Calculate breaks
+breaks_nor <- classIntervals(mapaProvCovid$ratioPOS_20_21,
+                         n = 5,
+                         style = "quantile")$brks
+
+# 2. Create categorical variable
+mapaProvCovid$ratio_cat <- cut(mapaProvCovid$ratioPOS_20_21,
+                              breaks = breaks_nor,
+                              include.lowest = TRUE)
+
+# 3. Plot with ggplot
+ggplot(mapaProvCovid) +
+  geom_sf(aes(fill = ratio_cat)) +
+  scale_fill_brewer(palette = "YlOrRd")
+```
+
+```{r}
+# Drop diff column (we do not need the non nomalized)
+mapaProvCovid <- mapaProvCovid %>%
+  select(-diffPOS_20_21)
+
+# currently
+head(mapaProvCovid)
+```
+
+```{r}
+# Summary statistics (equivalent to .describe())
+summary(mapaProvCovid)
+```
+
+# Discretizing
+
+## Using Quantiles
+
+```{r}
+# Create quantile breaks (equivalent to mc.Quantiles)
+qn_ratioPOS <- classIntervals(mapaProvCovid$ratioPOS_20_21, n = 5, style = "quantile")
+```
+
+```{r}
+# View breaks
+qn_ratioPOS
+```
+
+## User-Defined Bins
+
+```{r}
+my_bins <- c(0.5, 0.8, 1.0, 1.5)
+
+# User-defined classification
+user_ratioPOS <- classIntervals(mapaProvCovid$ratioPOS_20_21,
+                                style = "fixed",
+                                fixedBreaks = c(min(mapaProvCovid$ratioPOS_20_21, na.rm = TRUE),
+                                                my_bins,
+                                                max(mapaProvCovid$ratioPOS_20_21, na.rm = TRUE)))
+
+user_ratioPOS
+```
+
+```{r}
+# Assign groups
+mapaProvCovid <- mapaProvCovid %>%
+  mutate(ratioPOS_20_21_group = cut(ratioPOS_20_21,
+                                    breaks = user_ratioPOS$brks,
+                                    labels = FALSE,
+                                    include.lowest = TRUE))
+
+print(head(mapaProvCovid))
+```
+
+## Recode Bin Labels
+
+```{r}
+TheLabels <- c('1_Best', '2_veryGood', '3_Good', '4_Bad', '5_Worst')
+
+mapaProvCovid <- mapaProvCovid %>%
+  mutate(ratioPOS_20_21_group = factor(ratioPOS_20_21_group,
+                                       levels = 1:5,
+                                       labels = TheLabels))
+
+print(head(mapaProvCovid))
+```
+
+### Plotting binned var
+
+```{r}
+# ggplot2 doesn't have built-in _r palettes, so 'direction = -1'
+ggplot(mapaProvCovid) +
+  geom_sf(aes(fill = ratioPOS_20_21_group)) +
+  scale_fill_brewer(palette = "YlOrRd",
+                    direction = -1,
+                    name = "Ratio Group")
+```
+
+### Colorblindness safe options:
+
+* viridis
+
+```{r}
+ggplot(mapaProvCovid) +
+  geom_sf(aes(fill = ratioPOS_20_21_group), color = "white", size = 0.1) +
+  scale_fill_viridis_d(option = "viridis",
+                       #  direction = -1,
+                       name = "Ratio Group") +
+  theme_minimal() +
+  labs(title = "COVID-19 Positivity Ratio by Province",
+       subtitle = "2021 vs 2020 (Viridis palette)")
+
+```
+
+* Cividis
+
+```{r}
+ggplot(mapaProvCovid) +
+  geom_sf(aes(fill = ratioPOS_20_21_group), color = "white", size = 0.1) +
+  scale_fill_viridis_d(option = "cividis",
+                      #  direction = -1,
+                       name = "Ratio Group") +
+  theme_minimal() +
+  labs(title = "COVID-19 Positivity Ratio by Province",
+       subtitle = "2021 vs 2020 (Viridis palette)")
+```
+
+* Diverging
+
+```{r}
+ggplot(mapaProvCovid) +
+  geom_sf(aes(fill = ratioPOS_20_21_group), color = "white", size = 0.1) +
+  scale_fill_brewer(
+    palette = "PuOr",  # Diverging colorblind-safe palette
+    # direction = -1,    # Reverse: Orange = Best, Purple = Worst
+    name = "Ratio Group"
+  ) +
+  theme_minimal() +
+  labs(title = "COVID-19 Positivity Ratio by Province",
+       subtitle = "Diverging palette: PuOr (colorblind-safe)")
+```
+
+
+
+# Spatial Autocorrelation (Moran's I & LISA)
+
+```{r}
+# --- Step 1: Remove NAs (if any) ---
+to_clust <- mapaProvCovid %>%
+  filter(!is.na(ratioPOS_20_21))
+
+# --- Step 2: Create Queen Weights ---
+queen_wts <- queen_weights(to_clust)
+
+# --- Step 3: Calculate Local Moran's I ---
+lisa <- local_moran(queen_wts, st_drop_geometry(to_clust["ratioPOS_20_21"]))
+
+# --- Step 4: Extract Results (the simple way) ---
+lisa_colors <- lisa_colors(lisa)
+lisa_labels <- lisa_labels(lisa)
+lisa_clusters <- lisa_clusters(lisa)
+
+
+# --- Step 5: PLottin ---
+
+library(ggplot2)
+
+to_clust$lisa_cluster <- factor(lisa_labels[lisa_clusters + 1], levels = lisa_labels)
+names(lisa_colors) <- lisa_labels
+
+ggplot(to_clust) +
+  geom_sf(aes(fill = lisa_cluster), color = "#333333", linewidth = 0.1) +
+  scale_fill_manual(values = lisa_colors, name = NULL, drop = FALSE) +
+  theme_minimal() +
+  labs(title = "Local Moran Map of COVID-19 Case Ratio (2020 vs 2021)")
+```
+
