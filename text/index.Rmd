@@ -3,8 +3,6 @@ output:
   html_document: default
   pdf_document: default
 ---
-<br> 
-<center><img src="https://i.imgur.com/AbCCpQO.png" width="700"></center>
 
 
 _____
@@ -45,8 +43,9 @@ Let us begin with a data frame containing some old tweets from D.Trump:
 ```{r}
 rm(list = ls())
 
-link1 = "https://github.com/DACSS-Visual/basicText/"
-link2 = "raw/main/trumps.csv"
+link1 = "https://github.com/MagallanesAtAlacip/datafiles/"
+link2 = "raw/main/text/trumps.csv"
+
 
 trumpLink = paste0(link1, link2)
 allTweets = read.csv(trumpLink, stringsAsFactors = FALSE)
@@ -287,7 +286,8 @@ Suppose we have this file:
 We can read it like this:
 
 ```{r}
-LinkText = "https://github.com/DACSS-Visual/basicText/raw/main/sometext.txt"
+LinkText = "https://github.com/MagallanesAtAlacip/datafiles/raw/main/text/sometext.txt"
+
 otherText = read.delim(LinkText, header = FALSE)
 
 head(otherText)
@@ -483,179 +483,5 @@ ggraph::ggraph(bigram_graph, layout = "fr") + theme_void() +
 
 
 This plot does not focus only on word frequency. Instead, it reveals **relationships between words**. That is often more meaningful than treating words separately.
-
-
-### 6.2 Topic models
-
-So far, we have focused on **individual words**: how often they appear, how they relate to other words, or how they can be visualized. But sometimes we are interested in something broader: the **main themes** discussed across many documents.
-
-This is where **topic models** become useful.
-
-A topic model is a statistical method that looks for groups of words that tend to appear together repeatedly across documents. When certain words frequently co-occur, the model interprets that pattern as a possible **topic**.
-
-For example, if many tweets contain words such as:
-
-- jobs  
-- economy  
-- workers  
-- manufacturing  
-
-the model may detect an **economic topic**.
-
-If another group repeatedly contains:
-
-- china  
-- trade  
-- tariffs  
-- imports  
-
-the model may detect a **trade policy topic**.
-
-The important point is that the model does **not** know these labels beforehand. It only detects patterns of word co-occurrence. Humans then inspect the results and assign meaningful interpretations.
-
-In short, instead of asking:
-
-> Which words are most frequent?
-
-topic models ask:
-
-> Which words tend to appear together across documents, suggesting an underlying theme?
-
-
-
-Here we need counting again. **BUT NOT THIS**
-
-```{r, eval=FALSE}
-# not run
-WordsIn_SomeTrumpTweets_clean |>
-  count(EachWord)
-```
-
-We used the previous code before to count how many times a word appears in the whole text (corpus).
-
-Now we need this:
-
-```{r}
-WordsIn_SomeTrumpTweets_clean |>
-  count(tweet_id, EachWord)|>head()
-```
-
-Here, we know how many times `each word appear inside each tweet`. Let me save that:
-
-```{r}
-countWordsPerTweets=WordsIn_SomeTrumpTweets_clean |>
-  count(tweet_id, EachWord)
-
-```
-
-The object `countWordsPerTweets` is still a regular data frame in **long format**. Each row contains:
-
-- one tweet (`tweet_id`)
-- one word (`EachWord`)
-- how many times that word appeared in that tweet (`n`)
-
-For example:
-
-| tweet_id | EachWord | n |
-|---------:|----------|--:|
-| 1        | alaska   | 1 |
-| 1        | jobs     | 2 |
-| 2        | biden    | 1 |
-
-This format is excellent for inspection and manipulation, but many text-mining models require a different structure: a **Document-Term Matrix** (DTM).
-
-
-```{r}
-library(topicmodels)
-
-tweet_DTM =
-  countWordsPerTweets|>
-  cast_dtm(
-    document = tweet_id,
-    term = EachWord,
-    value = n
-  )
-```
-
-`tweet_DTM` is a matrix created from the text counts where:
-
-- rows are documents (tweets)
-- columns are words
-- cells contain how many times each word appears in each tweet
-
-We have:
-```{r}
-tweet_DTM
-```
-
-The object `tweet_dtm` is a **Document-Term Matrix**. In this case, it contains **121 documents** (tweets) and **824 unique terms** (different words found after preprocessing). Each row represents one tweet, each column represents one word, and each cell records how many times that word appears in that tweet. The matrix is highly sparse: only **1,331 cells contain values**, while **98,373 cells are zero**, producing **99% sparsity**. This is normal in text data, especially with short documents such as tweets, because any single tweet uses only a small fraction of all possible words. The longest term in the vocabulary has **15 characters**, and the weighting system used is **term frequency (tf)**, meaning that the matrix stores simple word counts rather than transformed measures such as tf-idf.
-
-We can check a portion of the DTM:
-```{r}
-# library(tm)
-tm::inspect(tweet_DTM[1:5,1:10])
-```
-
-
-
-In this section of the matrix:
-
-- 13 cells contain values
-- 37 cells are zero
-- 74% sparsity means that most tweet-word combinations are absent
-
-A `0` means the word does not appear in the tweet (a tweet is a row)
-
-The next step is to estimate a **topic model** using the `LDA()` function. LDA stands for **Latent Dirichlet Allocation**, one of the most common methods for discovering hidden themes in a collection of documents. 
-
-In the code below, the model uses `tweet_DTM` as input, meaning it analyzes the matrix of tweets and word frequencies created earlier. The argument `k = 3` tells the model to search for **three topics**, so the tweets will be represented as mixtures of three underlying themes. Each topic is defined statistically by a group of words that tend to appear together across tweets. The option `control = list(seed = 1234)` sets a random seed so that the results can be reproduced exactly when the code is run again. In short, this command asks the model to examine patterns of word co-occurrence across tweets and summarize them into three latent topics.
-
-```{r}
-lda_model = LDA(tweet_DTM, k = 3, control = list(seed = 1234))
-```
-
-You get:
-```{r}
-lda_model
-```
-
-We can extract important information from `lda_model`:
-
-```{r}
-topics_terms_betas = tidy(lda_model, matrix = "beta")
-##see
-topics_terms_betas
-```
-
-The object `topics_terms_betas` shows the probability of each word within each topic. In other words, beta measures how strongly a word is associated with a topic. Very small values mean that the word is almost absent from that topic, while larger values indicate that the word is more characteristic of it. To interpret the model, we usually focus on the words with the highest beta values in each topic.
-
-
-
-Let us extract the most important terms in each topic:
-
-```{r}
-topics_terms_betas<-topics_terms_betas |>
-  group_by(topic) |>
-  slice_max(beta, n = 8) |>
-  ungroup()
-```
-
-To plot them nicely, we use a helper from `tidytext`:
-
-```{r, echo=FALSE}
-ggplot(topics_terms_betas,
-       aes(x = reorder_within(term, beta, topic),
-           y = beta)) +
-  geom_col() +
-  facet_wrap(~topic, scales = "free") +
-  scale_x_reordered() +
-  coord_flip() +
-  labs(
-    x = "",
-    y = "Beta",
-    title = "Top terms by topic"
-  ) +
-  theme_minimal(base_size = 14)
-```
 
 This is where we end. I hope you liked the journey!
